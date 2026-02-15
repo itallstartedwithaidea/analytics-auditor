@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Analytics Auditor — Scan</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#08080d;--bg2:#0e0e16;--bg3:#14141f;--surface:#1a1a2a;--border:#2a2a3a;--text:#e8e6e3;--text2:#9a9aaa;--amber:#f0a830;--amber2:#d4941a;--green:#4ade80;--blue:#60a5fa;--purple:#a78bfa;--red:#f87171;--cyan:#22d3ee;--font-mono:'JetBrains Mono','Courier New',monospace;--font-body:'IBM Plex Sans',-apple-system,sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;min-height:100vh}
+a{color:var(--amber);text-decoration:none}
+
+/* Topbar */
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg)ee;backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 1.5rem;height:48px;display:flex;align-items:center;justify-content:space-between}
+.topbar-logo{font-family:var(--font-mono);font-size:12px;color:var(--text2);text-decoration:none}.topbar-logo span{color:var(--amber)}
+.topbar-right{display:flex;gap:6px;align-items:center}
+.tb{font-family:var(--font-mono);font-size:11px;color:var(--text2);padding:5px 12px;border-radius:5px;text-decoration:none;transition:all .2s;border:1px solid transparent;background:none;cursor:pointer}
+.tb:hover{border-color:var(--border);background:var(--bg2);color:var(--text)}
+
+/* Layout */
+.app{max-width:1000px;margin:0 auto;padding:1.5rem}
+
+/* Input Section */
+.input-section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:2rem;margin-bottom:1.5rem}
+.input-section h2{font-size:1.1rem;margin-bottom:.5rem;font-weight:500}
+.input-section p{font-size:.85rem;color:var(--text2);margin-bottom:1rem}
+.input-row{display:flex;gap:10px;margin-bottom:1rem}
+.url-input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none;transition:border-color .2s}
+.url-input:focus{border-color:var(--amber)}
+.url-input::placeholder{color:#444}
+.scan-btn{background:var(--amber);color:var(--bg);border:none;border-radius:8px;padding:10px 24px;font-family:var(--font-mono);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.scan-btn:hover{background:var(--amber2)}
+.scan-btn:disabled{opacity:.5;cursor:not-allowed}
+.mode-tabs{display:flex;gap:4px;margin-bottom:1rem}
+.mode-tab{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-family:var(--font-mono);font-size:11px;color:var(--text2);cursor:pointer;transition:all .2s}
+.mode-tab.active{background:var(--surface);border-color:var(--amber);color:var(--amber)}
+.html-input{width:100%;min-height:120px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--font-mono);font-size:12px;resize:vertical;outline:none;display:none}
+.html-input:focus{border-color:var(--amber)}
+.proxy-note{font-size:.8rem;color:var(--text2);margin-top:8px;padding:8px 12px;background:var(--bg);border-radius:6px;border:1px solid var(--border)}
+
+/* Progress */
+.progress-bar{height:3px;background:var(--surface);border-radius:3px;overflow:hidden;margin-bottom:1.5rem;display:none}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:3px;width:0;transition:width .4s ease}
+.status-msg{font-family:var(--font-mono);font-size:12px;color:var(--text2);margin-bottom:1rem;display:none}
+
+/* Results */
+.results{display:none}
+.score-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:2rem}
+.score-circle{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0}
+.score-circle .num{font-family:var(--font-mono);font-size:24px;font-weight:600;line-height:1}
+.score-circle .grade{font-family:var(--font-mono);font-size:11px;margin-top:2px}
+.score-a{border:2px solid var(--green);color:var(--green)}
+.score-b{border:2px solid var(--blue);color:var(--blue)}
+.score-c{border:2px solid var(--amber);color:var(--amber)}
+.score-d{border:2px solid var(--red);color:var(--red)}
+.score-meta{flex:1}
+.score-meta h3{font-size:1rem;margin-bottom:.25rem;font-weight:500}
+.score-meta p{font-size:.85rem;color:var(--text2)}
+.score-summary{display:flex;gap:1.5rem;margin-top:.5rem;font-family:var(--font-mono);font-size:12px}
+.score-summary span{display:flex;align-items:center;gap:4px}
+
+/* Tag Cards */
+.tag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:1.5rem}
+.tag-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.25rem;transition:border-color .2s}
+.tag-card:hover{border-color:var(--amber)}
+.tag-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.tag-name{font-family:var(--font-mono);font-size:13px;font-weight:600}
+.tag-status{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:4px}
+.tag-status.found{background:#4ade8018;color:var(--green);border:1px solid #4ade8033}
+.tag-status.partial{background:#f0a83018;color:var(--amber);border:1px solid #f0a83033}
+.tag-status.missing{background:#f8717118;color:var(--red);border:1px solid #f8717133}
+.tag-details{font-size:.82rem;color:var(--text2);line-height:1.6}
+.tag-details code{background:var(--bg);padding:1px 5px;border-radius:3px;color:var(--cyan);font-size:11px}
+
+/* Issues */
+.issues-section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.issues-section h3{font-size:1rem;margin-bottom:1rem;font-weight:500}
+.issue-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #1a1a2a}
+.issue-item:last-child{border-bottom:none}
+.issue-sev{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:4px;flex-shrink:0;height:fit-content;margin-top:2px}
+.issue-sev.critical{background:#f8717118;color:var(--red)}
+.issue-sev.high{background:#f0a83018;color:var(--amber)}
+.issue-sev.medium{background:#60a5fa18;color:var(--blue)}
+.issue-sev.low{background:#a78bfa18;color:var(--purple)}
+.issue-body h4{font-size:.88rem;margin-bottom:4px;font-weight:500}
+.issue-body p{font-size:.82rem;color:var(--text2)}
+.fix-toggle{font-family:var(--font-mono);font-size:11px;color:var(--green);cursor:pointer;margin-top:6px;display:inline-block}
+.fix-toggle:hover{text-decoration:underline}
+.fix-code{display:none;margin-top:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;font-family:var(--font-mono);font-size:11px;color:var(--green);line-height:1.5;overflow-x:auto;position:relative;white-space:pre}
+.copy-btn{position:absolute;top:6px;right:6px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:3px 10px;font-family:var(--font-mono);font-size:10px;color:var(--text2);cursor:pointer}
+.copy-btn:hover{color:var(--amber);border-color:var(--amber)}
+
+/* Export */
+.export-bar{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap}
+.export-btn{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 16px;font-family:var(--font-mono);font-size:11px;color:var(--text2);cursor:pointer;transition:all .2s}
+.export-btn:hover{border-color:var(--amber);color:var(--amber)}
+
+@media(max-width:640px){.input-row{flex-direction:column}.score-card{flex-direction:column;text-align:center}.tag-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav class="topbar">
+  <a href="https://googleadsagent.ai" class="topbar-logo"><span>googleadsagent</span>.ai</a>
+  <div class="topbar-right">
+    <a href="https://github.com/itallstartedwithaidea/analytics-auditor" class="tb" target="_blank">GitHub</a>
+    <a href="index.html" class="tb">← Overview</a>
+    <a href="docs.html" class="tb">Docs</a>
+  </div>
+</nav>
+
+<div class="app">
+  <!-- INPUT -->
+  <div class="input-section">
+    <h2>⚡ Marketing Analytics Auditor</h2>
+    <p>Scan any page for GA4, GTM, and marketing pixels. Detect issues and generate remediation code.</p>
+    <div class="mode-tabs">
+      <div class="mode-tab active" data-mode="url" onclick="setMode('url')">Scan URL</div>
+      <div class="mode-tab" data-mode="html" onclick="setMode('html')">Paste HTML</div>
+      <div class="mode-tab" data-mode="demo" onclick="setMode('demo')">Demo Scan</div>
+    </div>
+    <div id="urlMode">
+      <div class="input-row">
+        <input type="text" class="url-input" id="urlInput" placeholder="https://example.com" spellcheck="false">
+        <button class="scan-btn" id="scanBtn" onclick="runScan()">Scan Page</button>
+      </div>
+      <div class="proxy-note">
+        <strong>How scanning works:</strong> Enter a URL and the scanner will analyze the HTML for tags and pixels. For full JavaScript-rendered scanning, you can paste the page source (View Source → Ctrl+U) in the "Paste HTML" tab. All analysis runs in your browser — nothing is sent to any server.
+      </div>
+    </div>
+    <div id="htmlMode" style="display:none">
+      <textarea class="html-input" id="htmlInput" placeholder="Paste full HTML source code here (Ctrl+U on any page to get it)..." style="display:block"></textarea>
+      <div class="input-row" style="margin-top:10px">
+        <input type="text" class="url-input" id="htmlUrlInput" placeholder="Source URL (for the report)" style="flex:1">
+        <button class="scan-btn" onclick="runHtmlScan()">Analyze HTML</button>
+      </div>
+    </div>
+    <div id="demoMode" style="display:none">
+      <p style="font-size:.85rem;color:var(--text2);margin-bottom:10px">Run a demo scan against a simulated ecommerce site to see the full audit experience — tag detection, issue identification, scoring, and remediation code generation.</p>
+      <button class="scan-btn" onclick="runDemoScan()">▶ Run Demo Scan</button>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="status-msg" id="statusMsg"></div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="score-card" id="scoreCard"></div>
+    <div class="export-bar" id="exportBar">
+      <button class="export-btn" onclick="exportJSON()">Export JSON</button>
+      <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+      <button class="export-btn" onclick="exportRemediation()">Download Remediation Code</button>
+      <button class="export-btn" onclick="window.print()">Print Report</button>
+    </div>
+    <h3 style="font-size:.95rem;margin-bottom:.75rem;font-weight:500">Detected Tags</h3>
+    <div class="tag-grid" id="tagGrid"></div>
+    <div class="issues-section" id="issuesSection">
+      <h3>Issues & Remediation</h3>
+      <div id="issuesList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// MARKETING ANALYTICS AUDITOR — Phase 1: Page Scanner Engine
+// ============================================================
+
+var currentMode = 'url';
+var scanResult = null;
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.mode === mode); });
+  document.getElementById('urlMode').style.display = mode === 'url' ? '' : 'none';
+  document.getElementById('htmlMode').style.display = mode === 'html' ? '' : 'none';
+  document.getElementById('demoMode').style.display = mode === 'demo' ? '' : 'none';
+}
+
+// ============================================================
+// TAG DETECTION SIGNATURES
+// ============================================================
+
+var TAG_DEFS = {
+  ga4: {
+    name: 'Google Analytics 4',
+    short: 'GA4',
+    scripts: [/gtag\/js\?id=G-[A-Z0-9]+/i, /googletagmanager\.com\/gtag/],
+    globals: ['gtag','google_tag_data'],
+    network: [/google-analytics\.com\/g\/collect/, /analytics\.google\.com/],
+    cookies: ['_ga','_gid'],
+    extractId: function(h){ var m=h.match(/G-[A-Z0-9]{6,12}/g); return m ? [...new Set(m)] : []; },
+    checks: function(h, ids){
+      var r = [];
+      if(h.match(/enhanced.?measurement/i) || h.match(/page_view|scroll|click|file_download/)) r.push({s:'pass',t:'Enhanced Measurement signals detected'});
+      if(h.match(/dataLayer\.push/)) r.push({s:'pass',t:'dataLayer.push() calls found'});
+      if(!h.match(/purchase|add_to_cart|begin_checkout/i)) r.push({s:'warn',t:'No ecommerce events detected in source'});
+      return r;
+    }
+  },
+  gtm: {
+    name: 'Google Tag Manager',
+    short: 'GTM',
+    scripts: [/googletagmanager\.com\/gtm\.js\?id=GTM-[A-Z0-9]+/i],
+    globals: ['google_tag_manager','dataLayer'],
+    extractId: function(h){ var m=h.match(/GTM-[A-Z0-9]{6,8}/gi); return m ? [...new Set(m)] : []; },
+    checks: function(h, ids){
+      var r = [];
+      if(h.match(/dataLayer\s*=\s*\[/) || h.match(/dataLayer\.push/)) r.push({s:'pass',t:'dataLayer initialized'});
+      else r.push({s:'warn',t:'dataLayer not found in source'});
+      var noscript = h.match(/<noscript>[\s\S]*?googletagmanager[\s\S]*?<\/noscript>/i);
+      if(noscript) r.push({s:'pass',t:'Noscript fallback present'});
+      else r.push({s:'warn',t:'GTM noscript fallback missing'});
+      return r;
+    }
+  },
+  meta_pixel: {
+    name: 'Meta Pixel',
+    short: 'Meta',
+    scripts: [/connect\.facebook\.net\/.*?\/fbevents\.js/i],
+    globals: ['fbq','_fbq'],
+    cookies: ['_fbp','_fbc'],
+    extractId: function(h){ var m=h.match(/fbq\s*\(\s*['"]init['"]\s*,\s*['"](\d+)['"]/); return m ? [m[1]] : []; },
+    checks: function(h, ids){
+      var r = [];
+      if(h.match(/fbq\s*\(\s*['"]track['"]\s*,\s*['"]PageView['"]/i)) r.push({s:'pass',t:'PageView event firing'});
+      else r.push({s:'warn',t:'PageView event not detected'});
+      var advMatch = h.match(/fbq\s*\(\s*['"]init['"]\s*,\s*['"][\d]+['"]\s*,\s*\{/);
+      if(advMatch) r.push({s:'pass',t:'Advanced Matching configured'});
+      else r.push({s:'warn',t:'Advanced Matching not detected'});
+      if(h.match(/fbq\s*\(\s*['"]track['"]\s*,\s*['"](Purchase|AddToCart|Lead)/i)) r.push({s:'pass',t:'Standard events found'});
+      else r.push({s:'warn',t:'No standard events beyond PageView'});
+      return r;
+    }
+  },
+  google_ads: {
+    name: 'Google Ads',
+    short: 'GAds',
+    scripts: [/gtag\/js\?id=AW-\d+/i],
+    globals: [],
+    cookies: ['_gcl_aw','_gcl_dc'],
+    extractId: function(h){ var m=h.match(/AW-\d+/g); return m ? [...new Set(m)] : []; },
+    checks: function(h, ids){
+      var r = [];
+      if(h.match(/send_to.*?AW-.*?\/.*?\//)) r.push({s:'pass',t:'Conversion tracking configured'});
+      if(h.match(/enhanced.?conversions|user_data/i)) r.push({s:'pass',t:'Enhanced Conversions signals detected'});
+      else r.push({s:'warn',t:'Enhanced Conversions not detected'});
+      return r;
+    }
+  },
+  tiktok: {
+    name: 'TikTok Pixel',
+    short: 'TikTok',
+    scripts: [/analytics\.tiktok\.com\/i18n\/pixel\/events\.js/i],
+    globals: ['ttq'],
+    cookies: ['_ttp'],
+    extractId: function(h){ var m=h.match(/ttq\.load\s*\(\s*['"]([A-Z0-9]+)['"]/i); return m ? [m[1]] : []; },
+    checks: function(h, ids){
+      var r = [];
+      if(h.match(/ttq\.(track|page)/i)) r.push({s:'pass',t:'Events being sent'});
+      else r.push({s:'warn',t:'No TikTok events detected beyond base'});
+      return r;
+    }
+  },
+  linkedin: {
+    name: 'LinkedIn Insight',
+    short: 'LinkedIn',
+    scripts: [/snap\.licdn\.com\/li\.lms-analytics/i, /linkedin.*?insight/i],
+    globals: ['_linkedin_data_partner_ids','lintrk'],
+    extractId: function(h){ var m=h.match(/_linkedin_data_partner_ids\s*=\s*\[["']?(\d+)/); return m ? [m[1]] : []; },
+    checks: function(){ return []; }
+  },
+  pinterest: {
+    name: 'Pinterest Tag',
+    short: 'Pinterest',
+    scripts: [/pintrk/i, /ct\.pinterest\.com/i],
+    globals: ['pintrk'],
+    extractId: function(h){ var m=h.match(/pintrk\s*\(\s*['"]load['"]\s*,\s*['"](\d+)['"]/); return m ? [m[1]] : []; },
+    checks: function(){ return []; }
+  },
+  snapchat: {
+    name: 'Snapchat Pixel',
+    short: 'Snap',
+    scripts: [/sc-static\.net\/scevent\.min\.js/i],
+    globals: ['snaptr'],
+    extractId: function(h){ var m=h.match(/snaptr\s*\(\s*['"]init['"]\s*,\s*['"]([a-f0-9-]+)['"]/); return m ? [m[1]] : []; },
+    checks: function(){ return []; }
+  },
+  twitter: {
+    name: 'X / Twitter Pixel',
+    short: 'X',
+    scripts: [/static\.ads-twitter\.com\/uwt\.js/i],
+    globals: ['twq'],
+    extractId: function(h){ var m=h.match(/twq\s*\(\s*['"]init['"]\s*,\s*['"]([a-z0-9]+)['"]/i); return m ? [m[1]] : []; },
+    checks: function(){ return []; }
+  },
+  microsoft_uet: {
+    name: 'Microsoft UET',
+    short: 'UET',
+    scripts: [/bat\.bing\.com\/bat\.js/i],
+    globals: ['UET','uetq'],
+    cookies: ['_uetmsclkid'],
+    extractId: function(h){ var m=h.match(/uetq.*?ti["':\s]+(\d+)/); if(m) return [m[1]]; m=h.match(/o\s*=\s*\{.*?ti\s*:\s*["'](\d+)["']/); return m ? [m[1]] : []; },
+    checks: function(){ return []; }
+  }
+};
+
+// ============================================================
+// CONSENT DETECTION
+// ============================================================
+
+function detectConsent(html) {
+  var c = { detected: false, type: null, details: [] };
+  if(html.match(/gtag\s*\(\s*['"]consent['"]\s*,\s*['"]default['"]/i) || html.match(/consent_mode/i)){
+    c.detected = true; c.type = 'Google Consent Mode v2'; c.details.push('Consent Mode default command found');
+  }
+  if(html.match(/__tcfapi|tcf.*?api|iabtcf/i)){
+    c.detected = true; c.type = (c.type ? c.type + ' + ' : '') + 'TCF 2.0';
+    c.details.push('IAB TCF 2.0 API detected');
+  }
+  if(html.match(/cookie.?consent|consent.?banner|cookie.?notice|OneTrust|Cookiebot|cookie.?law/i)){
+    c.detected = true;
+    if(!c.type) c.type = 'Cookie Banner';
+    c.details.push('Consent UI detected');
+  }
+  return c;
+}
+
+// ============================================================
+// SCAN ENGINE
+// ============================================================
+
+function scanHTML(html, url) {
+  var tags = {};
+  var issues = [];
+  var totalScore = 100;
+
+  // Detect each tag
+  Object.keys(TAG_DEFS).forEach(function(key){
+    var def = TAG_DEFS[key];
+    var found = false;
+    var method = null;
+
+    // Check script patterns
+    def.scripts.forEach(function(pat){
+      if(pat.test(html)){ found = true; method = 'script'; }
+    });
+
+    // Check global objects
+    if(!found && def.globals){
+      def.globals.forEach(function(g){
+        var pat = new RegExp('(window\\.)?' + g.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\s*[=\\(\\.]','i');
+        if(pat.test(html)){ found = true; method = 'global'; }
+      });
+    }
+
+    // Extract IDs
+    var ids = def.extractId(html);
+    if(ids.length > 0) found = true;
+
+    // Run tag-specific checks
+    var checks = [];
+    if(found && def.checks) checks = def.checks(html, ids);
+
+    tags[key] = {
+      key: key,
+      name: def.name,
+      short: def.short,
+      found: found,
+      method: method,
+      ids: ids,
+      checks: checks,
+      cookies: def.cookies || []
+    };
+  });
+
+  // Consent
+  var consent = detectConsent(html);
+
+  // Generate issues
+  // Check for ecommerce signals
+  var isEcommerce = /product|add.?to.?cart|checkout|purchase|price|shop|buy|cart/i.test(html);
+  var isLeadGen = /contact|lead|form|submit|inquiry|quote|schedule|book/i.test(html);
+
+  if(tags.ga4.found && isEcommerce && !html.match(/purchase/i)){
+    issues.push({
+      sev: 'critical', title: 'No purchase event detected',
+      desc: 'This appears to be an ecommerce site but no purchase event was found in the page source.',
+      fix: "// Add to your order confirmation / thank you page:\ndataLayer.push({\n  event: 'purchase',\n  ecommerce: {\n    transaction_id: '{{ORDER_ID}}',\n    value: {{ORDER_TOTAL}},\n    tax: {{TAX_AMOUNT}},\n    shipping: {{SHIPPING_COST}},\n    currency: 'USD',\n    items: [{\n      item_id: '{{SKU}}',\n      item_name: '{{PRODUCT_NAME}}',\n      price: {{PRICE}},\n      quantity: {{QTY}}\n    }]\n  }\n});"
+    });
+    totalScore -= 15;
+  }
+
+  if(tags.ga4.found && isEcommerce && !html.match(/add_to_cart/i)){
+    issues.push({
+      sev: 'high', title: 'No add_to_cart event detected',
+      desc: 'Ecommerce site missing add_to_cart tracking. This event is critical for measuring shopping behavior.',
+      fix: "// Fire when user clicks 'Add to Cart':\ndataLayer.push({\n  event: 'add_to_cart',\n  ecommerce: {\n    currency: 'USD',\n    value: {{PRICE}},\n    items: [{\n      item_id: '{{SKU}}',\n      item_name: '{{PRODUCT_NAME}}',\n      price: {{PRICE}},\n      quantity: 1\n    }]\n  }\n});"
+    });
+    totalScore -= 10;
+  }
+
+  if(tags.ga4.found && isLeadGen && !html.match(/generate_lead|form_submit/i)){
+    issues.push({
+      sev: 'high', title: 'No lead generation event detected',
+      desc: 'This appears to be a lead gen site but no generate_lead or form_submit event was found.',
+      fix: "// Fire on successful form submission:\ndataLayer.push({\n  event: 'generate_lead',\n  currency: 'USD',\n  value: {{LEAD_VALUE}},  // estimated lead value\n  form_name: '{{FORM_NAME}}'\n});"
+    });
+    totalScore -= 10;
+  }
+
+  if(tags.meta_pixel.found){
+    var advMatch = html.match(/fbq\s*\(\s*['"]init['"]\s*,\s*['"][\d]+['"]\s*,\s*\{/);
+    if(!advMatch){
+      issues.push({
+        sev: 'high', title: 'Meta Pixel: Advanced Matching not configured',
+        desc: 'Advanced Matching improves attribution by 10-30%. Pass hashed email and phone in the init call.',
+        fix: "// Replace your fbq('init') call with:\nfbq('init', '{{PIXEL_ID}}', {\n  em: '{{HASHED_EMAIL}}',    // SHA-256 hash\n  ph: '{{HASHED_PHONE}}',    // SHA-256 hash\n  fn: '{{FIRST_NAME}}',\n  ln: '{{LAST_NAME}}'\n});"
+      });
+      totalScore -= 10;
+    }
+    if(!html.match(/facebook.*?connect.*?capi|server.?event|conversion.?api/i)){
+      issues.push({
+        sev: 'medium', title: 'Meta CAPI not detected',
+        desc: 'Only client-side pixel detected. Server-side Conversions API improves match rates and works around ad blockers.',
+        fix: "// Node.js — Meta Conversions API endpoint:\nconst bizSdk = require('facebook-nodejs-business-sdk');\nconst ServerEvent = bizSdk.ServerEvent;\nconst EventRequest = bizSdk.EventRequest;\nconst UserData = bizSdk.UserData;\nconst CustomData = bizSdk.CustomData;\n\nconst userData = new UserData()\n  .setEmail('{{HASHED_EMAIL}}')\n  .setPhone('{{HASHED_PHONE}}')\n  .setClientIpAddress(req.ip)\n  .setClientUserAgent(req.headers['user-agent'])\n  .setFbp(req.cookies._fbp)\n  .setFbc(req.cookies._fbc);\n\nconst serverEvent = new ServerEvent()\n  .setEventName('Purchase')\n  .setEventTime(Math.floor(Date.now()/1000))\n  .setUserData(userData)\n  .setEventId('{{UNIQUE_EVENT_ID}}')  // for dedup\n  .setActionSource('website');\n\nconst evtReq = new EventRequest(\n  '{{ACCESS_TOKEN}}', '{{PIXEL_ID}}'\n).setEvents([serverEvent]);\n\nawait evtReq.execute();"
+      });
+      totalScore -= 5;
+    }
+  }
+
+  if(tags.tiktok.found && !html.match(/ttq\.(track|page)\s*\(\s*['"](AddToCart|Purchase|SubmitForm|CompletePayment)/i)){
+    issues.push({
+      sev: 'high', title: 'TikTok Pixel: No standard events configured',
+      desc: 'Only base pixel code detected. Add standard events for attribution and optimization.',
+      fix: "// Add to cart:\nttq.track('AddToCart', {\n  content_id: '{{SKU}}',\n  content_name: '{{PRODUCT_NAME}}',\n  content_type: 'product',\n  quantity: 1,\n  price: {{PRICE}},\n  value: {{PRICE}},\n  currency: 'USD'\n});\n\n// Purchase:\nttq.track('CompletePayment', {\n  content_id: '{{SKU}}',\n  content_type: 'product',\n  quantity: 1,\n  value: {{ORDER_TOTAL}},\n  currency: 'USD'\n});"
+    });
+    totalScore -= 10;
+  }
+
+  if(!tags.linkedin.found && (html.match(/b2b|enterprise|business|saas|software/i))){
+    issues.push({
+      sev: 'high', title: 'LinkedIn Insight tag not installed',
+      desc: 'This appears to be a B2B site but no LinkedIn Insight tag was detected. Required for LinkedIn Ads attribution.',
+      fix: '<!-- LinkedIn Insight Tag -->\n<script type="text/javascript">\n_linkedin_data_partner_ids = _linkedin_data_partner_ids || [];\n_linkedin_data_partner_ids.push({{PARTNER_ID}});\n</script>\n<script type="text/javascript">\n(function(l) {\nif (!l){window.lintrk = function(a,b){window.lintrk.q.push([a,b])};\nwindow.lintrk.q=[]}\nvar s = document.getElementsByTagName("script")[0];\nvar b = document.createElement("script");\nb.type = "text/javascript";b.async = true;\nb.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js";\ns.parentNode.insertBefore(b, s);})(window.lintrk);\n</script>'
+    });
+    totalScore -= 10;
+  }
+
+  if(tags.google_ads.found && !html.match(/enhanced.?conversions|user_data/i)){
+    issues.push({
+      sev: 'medium', title: 'Google Ads: Enhanced Conversions not detected',
+      desc: 'Enhanced Conversions improve conversion measurement accuracy by sending hashed first-party data.',
+      fix: "// Add before the conversion gtag event:\ngtag('set', 'user_data', {\n  'email': '{{USER_EMAIL}}',       // plaintext, Google hashes it\n  'phone_number': '{{USER_PHONE}}',\n  'address': {\n    'first_name': '{{FIRST_NAME}}',\n    'last_name': '{{LAST_NAME}}',\n    'street': '{{STREET}}',\n    'city': '{{CITY}}',\n    'region': '{{STATE}}',\n    'postal_code': '{{ZIP}}',\n    'country': 'US'\n  }\n});"
+    });
+    totalScore -= 5;
+  }
+
+  if(!consent.detected){
+    issues.push({
+      sev: 'medium', title: 'No consent management detected',
+      desc: 'No cookie consent banner, Google Consent Mode, or TCF 2.0 implementation found. Required for GDPR/CCPA compliance.',
+      fix: "// Google Consent Mode v2 - add BEFORE any gtag/GTM code:\n<script>\nwindow.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\n\n// Default: deny until user consents\ngtag('consent', 'default', {\n  'ad_storage': 'denied',\n  'ad_user_data': 'denied',\n  'ad_personalization': 'denied',\n  'analytics_storage': 'denied',\n  'wait_for_update': 500\n});\n</script>\n\n// After user grants consent:\ngtag('consent', 'update', {\n  'ad_storage': 'granted',\n  'ad_user_data': 'granted',\n  'ad_personalization': 'granted',\n  'analytics_storage': 'granted'\n});"
+    });
+    totalScore -= 5;
+  }
+
+  if(tags.gtm.found){
+    var noscript = html.match(/<noscript>[\s\S]*?googletagmanager[\s\S]*?<\/noscript>/i);
+    if(!noscript){
+      issues.push({
+        sev: 'low', title: 'GTM noscript fallback missing',
+        desc: 'The GTM noscript iframe should be placed immediately after the opening <body> tag for users with JavaScript disabled.',
+        fix: '<!-- Add immediately after <body>: -->\n<noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{GTM_ID}}"\nheight="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>'
+      });
+      totalScore -= 2;
+    }
+  }
+
+  totalScore = Math.max(0, Math.min(100, totalScore));
+
+  var grade = totalScore >= 90 ? 'A' : totalScore >= 80 ? 'B' : totalScore >= 70 ? 'C' : totalScore >= 60 ? 'D' : 'F';
+  var gradeLabel = totalScore >= 90 ? 'Excellent' : totalScore >= 80 ? 'Good' : totalScore >= 70 ? 'Needs Attention' : totalScore >= 60 ? 'Significant Issues' : 'Critical';
+
+  var tagCount = Object.values(tags).filter(function(t){ return t.found; }).length;
+
+  return {
+    url: url,
+    scannedAt: new Date().toISOString(),
+    tags: tags,
+    consent: consent,
+    issues: issues,
+    score: totalScore,
+    grade: grade,
+    gradeLabel: gradeLabel,
+    tagCount: tagCount,
+    issueCount: issues.length
+  };
+}
+
+// ============================================================
+// SCAN RUNNERS
+// ============================================================
+
+function showProgress(pct, msg){
+  var bar = document.getElementById('progressBar');
+  var fill = document.getElementById('progressFill');
+  var status = document.getElementById('statusMsg');
+  bar.style.display = '';
+  fill.style.width = pct + '%';
+  if(msg){ status.style.display = ''; status.textContent = msg; }
+}
+
+function hideProgress(){
+  document.getElementById('progressBar').style.display = 'none';
+  document.getElementById('statusMsg').style.display = 'none';
+}
+
+async function runScan(){
+  var url = document.getElementById('urlInput').value.trim();
+  if(!url) return;
+  if(!url.match(/^https?:\/\//)) url = 'https://' + url;
+
+  var btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+  btn.textContent = 'Scanning...';
+  showProgress(20, 'Fetching page via proxy...');
+
+  try {
+    // Try public CORS proxy
+    var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+    showProgress(40, 'Downloading HTML...');
+    var resp = await fetch(proxyUrl);
+    if(!resp.ok) throw new Error('Proxy returned ' + resp.status);
+    var html = await resp.text();
+    showProgress(70, 'Analyzing tags and pixels...');
+    await new Promise(function(r){ setTimeout(r, 300); });
+    scanResult = scanHTML(html, url);
+    showProgress(100, 'Scan complete!');
+    setTimeout(function(){ hideProgress(); renderResults(scanResult); }, 500);
+  } catch(e) {
+    showProgress(0, '');
+    hideProgress();
+    alert('Could not fetch URL. Try the "Paste HTML" tab instead — right-click the page → View Page Source (Ctrl+U), copy all, and paste here.\n\nError: ' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = 'Scan Page';
+}
+
+function runHtmlScan(){
+  var html = document.getElementById('htmlInput').value;
+  var url = document.getElementById('htmlUrlInput').value || 'pasted-source';
+  if(!html){ alert('Paste HTML source code first.'); return; }
+  showProgress(50, 'Analyzing tags and pixels...');
+  setTimeout(function(){
+    scanResult = scanHTML(html, url);
+    showProgress(100, 'Scan complete!');
+    setTimeout(function(){ hideProgress(); renderResults(scanResult); }, 400);
+  }, 200);
+}
+
+function runDemoScan(){
+  showProgress(10, 'Fetching demo page...');
+  var steps = [
+    [300, 25, 'Scanning DOM for script tags...'],
+    [400, 45, 'Inspecting JavaScript global objects...'],
+    [300, 60, 'Matching network request patterns...'],
+    [300, 75, 'Checking cookies and consent...'],
+    [400, 90, 'Generating remediation code...'],
+    [300, 100, 'Scan complete!']
+  ];
+  var i = 0;
+  function next(){
+    if(i >= steps.length){
+      setTimeout(function(){
+        hideProgress();
+        scanResult = getDemoResult();
+        renderResults(scanResult);
+      }, 400);
+      return;
+    }
+    var s = steps[i++];
+    setTimeout(function(){ showProgress(s[1], s[2]); next(); }, s[0]);
+  }
+  next();
+}
+
+// ============================================================
+// DEMO DATA
+// ============================================================
+
+function getDemoResult(){
+  var demoHTML = 'gtag("js") G-AB12CD34EF GTM-W8XK2M dataLayer googletagmanager noscript fbq("init","1234567890",{em: connect.facebook.net/en_US/fbevents.js fbq("track","PageView") _fbp AW-987654321 send_to google_ads analytics.tiktok.com ttq.load("CK8J2ABC") ttq.page() _ttp product add-to-cart checkout price shop buy cart';
+  return scanHTML(demoHTML, 'https://acme-ecommerce.com');
+}
+
+// ============================================================
+// RENDER RESULTS
+// ============================================================
+
+function renderResults(r){
+  var res = document.getElementById('results');
+  res.style.display = '';
+
+  // Score card
+  var sc = document.getElementById('scoreCard');
+  var scClass = r.score >= 90 ? 'score-a' : r.score >= 80 ? 'score-b' : r.score >= 70 ? 'score-c' : 'score-d';
+  sc.innerHTML = '<div class="score-circle ' + scClass + '"><div class="num">' + r.score + '</div><div class="grade">' + r.grade + '</div></div>' +
+    '<div class="score-meta"><h3>Tag Health Score: ' + r.gradeLabel + '</h3><p>' + r.url + '</p>' +
+    '<div class="score-summary"><span style="color:var(--green)">✓ ' + r.tagCount + ' tags</span>' +
+    '<span style="color:' + (r.issueCount > 0 ? 'var(--red)' : 'var(--green)') + '">' + (r.issueCount > 0 ? '✗' : '✓') + ' ' + r.issueCount + ' issues</span>' +
+    '<span style="color:var(--text2)">' + (r.consent.detected ? '🔒 ' + r.consent.type : '⚠ No consent') + '</span></div></div>';
+
+  // Tag grid
+  var grid = document.getElementById('tagGrid');
+  grid.innerHTML = '';
+  Object.values(r.tags).forEach(function(t){
+    var status = t.found ? (t.checks.some(function(c){return c.s==='warn'}) ? 'partial' : 'found') : 'missing';
+    var statusText = t.found ? (status === 'partial' ? 'PARTIAL' : 'DETECTED') : 'NOT FOUND';
+    var details = '';
+    if(t.found){
+      if(t.ids.length) details += 'ID: <code>' + t.ids.join(', ') + '</code><br>';
+      if(t.method) details += 'Loaded via: ' + t.method + '<br>';
+      t.checks.forEach(function(c){ details += (c.s==='pass' ? '<span style="color:var(--green)">✓</span> ' : '<span style="color:var(--amber)">⚠</span> ') + c.t + '<br>'; });
+    } else {
+      details = 'Tag not detected in page source';
+    }
+    grid.innerHTML += '<div class="tag-card"><div class="tag-header"><span class="tag-name">' + t.name + '</span><span class="tag-status ' + status + '">' + statusText + '</span></div><div class="tag-details">' + details + '</div></div>';
+  });
+
+  // Issues
+  var iSec = document.getElementById('issuesSection');
+  var iList = document.getElementById('issuesList');
+  if(r.issues.length === 0){
+    iSec.style.display = 'none';
+  } else {
+    iSec.style.display = '';
+    iList.innerHTML = '';
+    r.issues.forEach(function(issue, idx){
+      var fixId = 'fix_' + idx;
+      var html = '<div class="issue-item"><span class="issue-sev ' + issue.sev + '">' + issue.sev.toUpperCase() + '</span><div class="issue-body"><h4>' + issue.title + '</h4><p>' + issue.desc + '</p>';
+      if(issue.fix){
+        html += '<span class="fix-toggle" onclick="toggleFix(\'' + fixId + '\')">▶ Show remediation code</span>';
+        html += '<div class="fix-code" id="' + fixId + '"><button class="copy-btn" onclick="copyFix(\'' + fixId + '\')">Copy</button>' + escapeHtml(issue.fix) + '</div>';
+      }
+      html += '</div></div>';
+      iList.innerHTML += html;
+    });
+  }
+
+  // Scroll to results
+  res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleFix(id){
+  var el = document.getElementById(id);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+function copyFix(id){
+  var el = document.getElementById(id);
+  var text = el.textContent.replace('Copy','').trim();
+  navigator.clipboard.writeText(text);
+  var btn = el.querySelector('.copy-btn');
+  btn.textContent = 'Copied!';
+  setTimeout(function(){ btn.textContent = 'Copy'; }, 1500);
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+
+function exportJSON(){
+  if(!scanResult) return;
+  var blob = new Blob([JSON.stringify(scanResult, null, 2)], {type:'application/json'});
+  downloadBlob(blob, 'audit-' + scanResult.url.replace(/[^a-z0-9]/gi,'_') + '.json');
+}
+
+function exportCSV(){
+  if(!scanResult) return;
+  var rows = [['Tag','Status','IDs','Issues']];
+  Object.values(scanResult.tags).forEach(function(t){
+    rows.push([t.name, t.found ? 'Detected' : 'Not Found', t.ids.join('; '), t.checks.filter(function(c){return c.s==='warn'}).map(function(c){return c.t}).join('; ')]);
+  });
+  var csv = rows.map(function(r){ return r.map(function(c){ return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
+  downloadBlob(new Blob([csv],{type:'text/csv'}), 'audit-report.csv');
+}
+
+function exportRemediation(){
+  if(!scanResult || !scanResult.issues.length) return;
+  var text = '# Remediation Code — ' + scanResult.url + '\n# Generated: ' + scanResult.scannedAt + '\n# Score: ' + scanResult.score + '/100 (' + scanResult.grade + ')\n\n';
+  scanResult.issues.forEach(function(issue, i){
+    text += '# ' + (i+1) + '. [' + issue.sev.toUpperCase() + '] ' + issue.title + '\n';
+    text += '# ' + issue.desc + '\n\n';
+    if(issue.fix) text += issue.fix + '\n\n';
+    text += '# ---\n\n';
+  });
+  downloadBlob(new Blob([text],{type:'text/plain'}), 'remediation-code.txt');
+}
+
+function downloadBlob(blob, name){
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+</body>
+</html>

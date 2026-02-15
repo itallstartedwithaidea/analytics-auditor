@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Analytics Auditor — GA4, GTM & Pixel Audit + Remediation | googleadsagent.ai</title>
+<meta name="description" content="Free open-source auditor for GA4 properties, GTM containers, and marketing pixels. 40-point health check, CAPI validation, AI page scanning, and auto-generated remediation code. Zero-auth page scanning works instantly.">
+<meta name="keywords" content="ga4 audit, gtm audit, marketing pixel audit, google analytics audit, tag manager audit, meta pixel audit, capi validation, tracking audit, analytics health check, marketing analytics">
+<link rel="canonical" href="https://googleadsagent.ai/tools/auditor/">
+<meta property="og:title" content="Marketing Analytics Auditor — GA4, GTM & Pixel Audit + Auto-Remediation">
+<meta property="og:description" content="Free open-source auditor for GA4, GTM, and marketing pixels. Scans any URL, audits your config, and generates the exact code to fix what it finds.">
+<meta property="og:url" content="https://googleadsagent.ai/tools/auditor/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="googleadsagent.ai">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@_johnmwilliams">
+<meta name="robots" content="index, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital@0;1&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Marketing Analytics Auditor",
+  "description": "Free open-source GA4, GTM, and marketing pixel auditor with auto-generated remediation code.",
+  "url": "https://googleadsagent.ai/tools/auditor/",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web Browser",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "John Williams", "url": "https://itallstartedwithaidea.com" },
+  "isPartOf": { "@type": "WebApplication", "name": "Google Ads Agent", "url": "https://googleadsagent.ai" },
+  "featureList": "GA4 40-point property audit, GTM container audit, Marketing pixel detection, CAPI validation, Auto-remediation code generation, AI page vision scanning"
+}
+</script>
+<style>
+:root {
+  --bg: #08080d;
+  --bg2: #0e0e16;
+  --bg3: #14141f;
+  --surface: #1a1a2a;
+  --border: #2a2a3a;
+  --text: #e8e6e3;
+  --text2: #9a9aaa;
+  --amber: #f0a830;
+  --amber2: #d4941a;
+  --green: #4ade80;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  --red: #f87171;
+  --cyan: #22d3ee;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --font-body: 'IBM Plex Sans', -apple-system, sans-serif;
+  --font-quote: 'Courier Prime', 'Courier New', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.7; }
+a { color: var(--amber); text-decoration: none; transition: color 0.2s; }
+a:hover { color: var(--amber2); }
+
+/* === TOPBAR === */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--bg)ee; backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem; height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar-logo {
+  font-family: var(--font-mono); font-size: 13px; color: var(--text2);
+  text-decoration: none; letter-spacing: 0.02em;
+}
+.topbar-logo span { color: var(--amber); }
+.topbar-right { display: flex; gap: 8px; align-items: center; }
+.tb {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text2);
+  padding: 6px 14px; border-radius: 6px; text-decoration: none;
+  transition: all 0.2s; border: 1px solid transparent; background: none; cursor: pointer;
+}
+.tb:hover { border-color: var(--border); background: var(--bg2); color: var(--text); }
+.tb.primary { background: var(--amber); color: var(--bg); font-weight: 600; border-color: var(--amber); }
+.tb.primary:hover { background: var(--amber2); border-color: var(--amber2); }
+
+/* === HERO === */
+.hero {
+  padding: 5rem 2rem 3rem; text-align: center;
+  max-width: 900px; margin: 0 auto;
+}
+.hero-badge {
+  display: inline-block; font-family: var(--font-mono); font-size: 11px;
+  color: var(--green); border: 1px solid #4ade8033; background: #4ade800a;
+  padding: 4px 14px; border-radius: 20px; margin-bottom: 1.5rem;
+  letter-spacing: 0.08em; animation: fadeIn 0.6s ease;
+}
+.hero h1 {
+  font-family: var(--font-serif); font-size: clamp(2.2rem, 5vw, 3.4rem);
+  color: var(--text); line-height: 1.15; margin-bottom: 1rem;
+  letter-spacing: 0.02em; animation: fadeIn 0.8s ease 0.1s both;
+}
+.hero h1 em { color: var(--amber); font-style: italic; }
+.hero-sub {
+  font-size: 1.05rem; color: var(--text2); max-width: 620px;
+  margin: 0 auto 2rem; line-height: 1.7;
+  animation: fadeIn 0.8s ease 0.2s both;
+}
+.hero-ctas {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  animation: fadeIn 0.8s ease 0.3s both;
+}
+.hero-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 28px; border-radius: 8px; font-family: var(--font-mono);
+  font-size: 13px; text-decoration: none; transition: all 0.25s ease;
+  font-weight: 500;
+}
+.hero-cta.primary { background: var(--amber); color: var(--bg); }
+.hero-cta.primary:hover { background: var(--amber2); transform: translateY(-1px); }
+.hero-cta.secondary { border: 1px solid var(--border); color: var(--text2); }
+.hero-cta.secondary:hover { border-color: var(--amber); color: var(--amber); }
+
+/* === ANIMATED DEMO === */
+.demo-window {
+  max-width: 780px; margin: 2.5rem auto 0; border-radius: 12px;
+  background: var(--bg2); border: 1px solid var(--border);
+  overflow: hidden; animation: fadeIn 0.8s ease 0.4s both;
+}
+.demo-titlebar {
+  background: var(--surface); padding: 10px 16px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.demo-dot { width: 10px; height: 10px; border-radius: 50%; }
+.demo-dot.r { background: #f87171; } .demo-dot.y { background: var(--amber); } .demo-dot.g { background: var(--green); }
+.demo-titletext { font-family: var(--font-mono); font-size: 11px; color: var(--text2); margin-left: 8px; }
+.demo-body { padding: 1.5rem 2rem; font-family: var(--font-mono); font-size: 12.5px; min-height: 380px; position: relative; }
+.demo-line { margin-bottom: 0.6rem; opacity: 0; animation: slideIn 0.4s ease forwards; line-height: 1.6; }
+.demo-prompt { color: var(--cyan); }
+.demo-url { color: var(--amber); }
+.demo-success { color: var(--green); }
+.demo-warn { color: var(--amber); }
+.demo-fail { color: var(--red); }
+.demo-dim { color: #555; }
+.demo-highlight { color: var(--purple); }
+.demo-tag {
+  display: inline-block; padding: 1px 8px; border-radius: 3px;
+  font-size: 11px; margin: 0 2px;
+}
+.demo-tag.pass { background: #4ade8018; color: var(--green); border: 1px solid #4ade8033; }
+.demo-tag.warn { background: #f0a83018; color: var(--amber); border: 1px solid #f0a83033; }
+.demo-tag.fail { background: #f8717118; color: var(--red); border: 1px solid #f8717133; }
+
+.scan-progress {
+  height: 3px; background: var(--surface); border-radius: 3px; margin: 12px 0;
+  overflow: hidden;
+}
+.scan-bar {
+  height: 100%; background: linear-gradient(90deg, var(--cyan), var(--green));
+  border-radius: 3px; width: 0; transition: width 0.3s ease;
+}
+
+.score-display {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 54px; height: 54px; border-radius: 50%;
+  font-family: var(--font-mono); font-weight: 600; font-size: 18px;
+  margin: 8px 0;
+}
+.score-a { border: 2px solid var(--green); color: var(--green); }
+.score-c { border: 2px solid var(--amber); color: var(--amber); }
+
+/* === SECTIONS === */
+.section { padding: 4rem 2rem; max-width: 900px; margin: 0 auto; }
+.section-label {
+  font-family: var(--font-mono); font-size: 11px; color: var(--amber);
+  text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.5rem;
+}
+.section h2 {
+  font-family: var(--font-serif); font-size: 1.8rem; color: var(--text);
+  margin-bottom: 1rem;
+}
+.section p { color: var(--text2); margin-bottom: 1rem; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+/* === PILLAR CARDS === */
+.pillars { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+.pillar {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 2rem; transition: all 0.3s ease; position: relative; overflow: hidden;
+}
+.pillar:hover { border-color: var(--amber); transform: translateY(-2px); }
+.pillar::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--amber), var(--green));
+  opacity: 0; transition: opacity 0.3s;
+}
+.pillar:hover::before { opacity: 1; }
+.pillar-icon { font-size: 1.8rem; margin-bottom: 0.75rem; }
+.pillar h3 { font-family: var(--font-body); font-weight: 600; font-size: 1.05rem; margin-bottom: 0.5rem; }
+.pillar p { font-size: 0.9rem; color: var(--text2); line-height: 1.6; }
+
+/* === AUDIT CHECKS LIST === */
+.checks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+.check-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 0.88rem; color: var(--text2); line-height: 1.5;
+}
+.check-icon { flex-shrink: 0; width: 18px; height: 18px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; margin-top: 2px; }
+.check-icon.crit { background: #f8717118; color: var(--red); }
+.check-icon.high { background: #f0a83018; color: var(--amber); }
+.check-icon.med { background: #60a5fa18; color: var(--blue); }
+
+/* === PLATFORM BADGES === */
+.platforms { display: flex; flex-wrap: wrap; gap: 10px; margin: 1.5rem 0; }
+.platform-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 6px;
+  font-family: var(--font-mono); font-size: 11px;
+  background: var(--bg2); border: 1px solid var(--border); color: var(--text2);
+}
+
+/* === COMPARISON TABLE === */
+.comp-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+.comp-table th {
+  text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border);
+  color: var(--text2); font-weight: 400; text-transform: uppercase;
+  font-size: 10px; letter-spacing: 0.12em; font-family: var(--font-mono);
+}
+.comp-table td { padding: 10px 12px; border-bottom: 1px solid #1a1a2a; }
+.comp-table tr:last-child { background: #f0a83008; }
+.comp-table tr:last-child td { color: var(--amber); font-weight: 500; }
+.y { color: var(--green); } .n { color: #333; }
+
+/* === FOOTER === */
+.footer {
+  padding: 4rem 2rem; text-align: center; border-top: 1px solid var(--border);
+}
+.footer-links {
+  display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+.footer-links a { font-family: var(--font-mono); font-size: 11px; color: var(--text2); }
+.footer-links a:hover { color: var(--amber); }
+.footer-tagline {
+  font-family: var(--font-mono); font-size: 9px; color: #221100;
+  letter-spacing: 0.15em;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 640px) {
+  .hero { padding: 3rem 1.5rem 2rem; }
+  .demo-body { padding: 1rem; font-size: 11px; }
+  .checks-grid { grid-template-columns: 1fr; }
+  .section { padding: 3rem 1.5rem; }
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a href="https://googleadsagent.ai" class="topbar-logo"><span>googleadsagent</span>.ai</a>
+  <div class="topbar-right">
+    <a href="https://github.com/itallstartedwithaidea/analytics-auditor" class="tb" target="_blank">GitHub</a>
+    <a href="docs.html" class="tb">Docs</a>
+    <a href="app.html" class="tb primary">Launch Auditor →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">OPEN SOURCE · FREE · NO AUTH REQUIRED</div>
+  <h1>Audit your analytics.<br><em>Fix it with code.</em></h1>
+  <p class="hero-sub">Scan any URL for GA4, GTM, and marketing pixels. Run a 40-point property audit. Then get the exact remediation code to fix what's broken. The tool that does what agencies charge $10K for — then goes further.</p>
+  <div class="hero-ctas">
+    <a href="app.html" class="hero-cta primary">⚡ Launch Auditor</a>
+    <a href="docs.html" class="hero-cta secondary">Read the Docs</a>
+    <a href="https://github.com/itallstartedwithaidea/analytics-auditor" class="hero-cta secondary" target="_blank">View Source</a>
+  </div>
+
+  <!-- ANIMATED DEMO WINDOW -->
+  <div class="demo-window" id="demoWindow">
+    <div class="demo-titlebar">
+      <div class="demo-dot r"></div><div class="demo-dot y"></div><div class="demo-dot g"></div>
+      <span class="demo-titletext">auditor — page scan</span>
+    </div>
+    <div class="demo-body" id="demoBody"></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- 3 PILLARS -->
+<section class="section reveal">
+  <div class="section-label">What It Does</div>
+  <h2>Three pillars, one tool</h2>
+  <p>Everyone does the "here's what's wrong" part. Nobody automates the "here's the exact code to fix it" part. This tool does both.</p>
+  <div class="pillars">
+    <div class="pillar">
+      <div class="pillar-icon">🔍</div>
+      <h3>Audit</h3>
+      <p>Scan GA4 properties, GTM containers, and marketing pixels for misconfigurations, missing events, and data quality issues. 40-point checklist with severity scoring.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">🔧</div>
+      <h3>Remediate</h3>
+      <p>For every issue found, get copy-paste dataLayer code, GTM container JSON imports, CAPI endpoint boilerplate, and developer handoff docs. The moat nobody else has.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">🤖</div>
+      <h3>Discover</h3>
+      <p>AI vision scans pages to identify interactive elements, suggests events to track, and maps against what's already collecting. Powered by Gemini or Claude vision.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- PAGE SCANNER -->
+<section class="section reveal">
+  <div class="section-label">Phase 1 — Live Now</div>
+  <h2>Zero-auth page scanner</h2>
+  <p>Enter any URL and instantly detect every marketing tag on the page. No login, no API keys, no setup. Detection via DOM analysis, JavaScript object inspection, network pattern matching, and cookie scanning.</p>
+  <div class="platforms">
+    <span class="platform-badge">GA4</span>
+    <span class="platform-badge">GTM</span>
+    <span class="platform-badge">Meta Pixel</span>
+    <span class="platform-badge">Google Ads</span>
+    <span class="platform-badge">TikTok</span>
+    <span class="platform-badge">LinkedIn</span>
+    <span class="platform-badge">Pinterest</span>
+    <span class="platform-badge">Snapchat</span>
+    <span class="platform-badge">X / Twitter</span>
+    <span class="platform-badge">Microsoft UET</span>
+  </div>
+  <p style="font-size:0.9rem">Each detected tag is checked for: base code presence, standard events, advanced matching parameters, consent mode integration, and CAPI configuration.</p>
+</section>
+
+<hr class="divider">
+
+<!-- GA4 AUDIT -->
+<section class="section reveal">
+  <div class="section-label">Phase 2 — GA4 Property Audit</div>
+  <h2>40-point property health check</h2>
+  <p>Connect via Google OAuth and run a comprehensive GA4 Admin API audit. Every check returns pass, warning, or fail — with a letter grade and actionable fixes.</p>
+  <div class="checks-grid">
+    <div class="check-item"><div class="check-icon crit">!</div>Data retention set to 14 months</div>
+    <div class="check-item"><div class="check-icon crit">!</div>Web data stream exists and active</div>
+    <div class="check-item"><div class="check-icon high">⚠</div>Enhanced measurement enabled</div>
+    <div class="check-item"><div class="check-icon high">⚠</div>Key events configured for industry</div>
+    <div class="check-item"><div class="check-icon high">⚠</div>Google Ads properly linked</div>
+    <div class="check-item"><div class="check-icon high">⚠</div>Search Console connected</div>
+    <div class="check-item"><div class="check-icon med">i</div>Google Signals active</div>
+    <div class="check-item"><div class="check-icon med">i</div>Attribution model configured</div>
+    <div class="check-item"><div class="check-icon med">i</div>BigQuery export enabled</div>
+    <div class="check-item"><div class="check-icon med">i</div>Internal traffic filtered</div>
+    <div class="check-item"><div class="check-icon med">i</div>Custom dimensions defined</div>
+    <div class="check-item"><div class="check-icon med">i</div>User access audit — no rogue accounts</div>
+  </div>
+  <p style="font-size:0.9rem; color: var(--text2);">Plus 28 more checks across data streams, event naming, product linking, audiences, and data sharing.</p>
+</section>
+
+<hr class="divider">
+
+<!-- REMEDIATION ENGINE -->
+<section class="section reveal">
+  <div class="section-label">Phase 4 — The Moat</div>
+  <h2>Auto-generated remediation code</h2>
+  <p>For every audit issue, the tool generates the exact code to fix it. Not "you should add a purchase event" — the actual <code>dataLayer.push()</code> code with parameters, the GTM container JSON ready to import, and the CAPI endpoint boilerplate in Node.js, Python, or PHP.</p>
+  <div class="pillars" style="grid-template-columns: 1fr 1fr;">
+    <div class="pillar">
+      <h3>What other tools give you</h3>
+      <p style="color:var(--red);">❌ "Purchase event is missing"<br>❌ "Consider adding enhanced conversions"<br>❌ "CAPI not detected"<br><br>A PDF that collects dust.</p>
+    </div>
+    <div class="pillar">
+      <h3>What this tool gives you</h3>
+      <p style="color:var(--green);">✅ Copy-paste <code>dataLayer.push()</code> code<br>✅ GTM container JSON import file<br>✅ CAPI endpoint boilerplate (Node/Python/PHP)<br>✅ Dev handoff doc with file placements</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- COMPETITIVE COMPARISON -->
+<section class="section reveal">
+  <div class="section-label">Landscape</div>
+  <h2>How it compares</h2>
+  <table class="comp-table">
+    <thead>
+      <tr><th>Tool</th><th>GA4</th><th>GTM</th><th>Pixels</th><th>CAPI</th><th>Fix Code</th><th>AI Vision</th><th>Price</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>ObservePoint</td><td class="n">—</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td>$$$$</td></tr>
+      <tr><td>DataTrue</td><td class="n">—</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td>$$$</td></tr>
+      <tr><td>Trackingplan</td><td class="y" style="opacity:.5">~</td><td class="n">—</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td>$$$</td></tr>
+      <tr><td>Adswerve GA4 Auditor</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td>Free</td></tr>
+      <tr><td>OWOX BI</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td>$$</td></tr>
+      <tr><td><strong>This Tool</strong></td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td><strong>Free</strong></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<hr class="divider">
+
+<!-- OPEN SOURCE -->
+<section class="section reveal">
+  <div class="section-label">Open Source</div>
+  <h2>Built in public, free forever</h2>
+  <p>Same playbook as the <a href="https://googleadsagent.ai">Google Ads API Agent</a>. The detection engine, audit checks, and remediation templates are all open source. Contribute platform signatures, add audit checks, or extend the remediation engine.</p>
+  <p>Part of the <a href="https://googleadsagent.ai">Google Ads Agent</a> ecosystem. Built by <a href="https://itallstartedwithaidea.com">John Williams</a> — Senior Paid Media Specialist at <a href="https://www.seerinteractive.com">Seer Interactive</a> with 15+ years managing $48M+ in digital advertising.</p>
+  <div style="margin-top:1.5rem">
+    <a href="app.html" class="hero-cta primary">⚡ Launch Auditor</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-links">
+    <a href="https://googleadsagent.ai">googleadsagent.ai</a>
+    <a href="https://github.com/itallstartedwithaidea/analytics-auditor" target="_blank">GitHub</a>
+    <a href="docs.html">Documentation</a>
+    <a href="https://itallstartedwithaidea.com" target="_blank">itallstartedwithaidea.com</a>
+    <a href="https://www.linkedin.com/in/johnmichaelwilliams" target="_blank">LinkedIn</a>
+    <a href="https://x.com/_johnmwilliams" target="_blank">X / Twitter</a>
+  </div>
+  <p class="footer-tagline">OPEN SOURCE · GA4 · GTM · PIXELS · CAPI · AI VISION · REMEDIATION · googleadsagent.ai</p>
+</footer>
+
+<!-- NOSCRIPT FALLBACK -->
+<noscript>
+<style>body{background:#08080d;color:#c8bfb0;font-family:Georgia,serif;max-width:860px;margin:0 auto;padding:40px 20px;line-height:1.8}h1,h2{color:#f0a830}a{color:#60a5fa}code{background:#12110e;padding:2px 6px;border-radius:3px;color:#4ade80}</style>
+<h1>Marketing Analytics Auditor</h1>
+<p>Free open-source auditor for GA4 properties, GTM containers, and marketing pixels. 40-point health check, CAPI validation, AI page scanning, and auto-generated remediation code.</p>
+<h2>Features</h2>
+<p>Zero-auth page scanner detects GA4, GTM, Meta Pixel, Google Ads, TikTok, LinkedIn, Pinterest, Snapchat, X/Twitter, and Microsoft UET tags on any URL. 40-point GA4 property audit via Admin API. Pixel and CAPI validation with event match quality scoring. Auto-generated remediation code: dataLayer.push() snippets, GTM container JSON, CAPI boilerplate. AI vision page scanning for event discovery.</p>
+<h2>Links</h2>
+<p><a href="app.html">Launch Auditor</a> · <a href="docs.html">Documentation</a> · <a href="https://github.com/itallstartedwithaidea/analytics-auditor">GitHub</a> · <a href="https://googleadsagent.ai">googleadsagent.ai</a></p>
+<p>Built by <a href="https://itallstartedwithaidea.com">John Williams</a> — Senior Paid Media Specialist at <a href="https://www.seerinteractive.com">Seer Interactive</a>.</p>
+<p><a href="https://github.com/itallstartedwithaidea/analytics-auditor">GitHub</a> · <a href="https://www.linkedin.com/in/johnmichaelwilliams">LinkedIn</a> · <a href="https://x.com/_johnmwilliams">X / Twitter</a> · <a href="https://itallstartedwithaidea.com">itallstartedwithaidea.com</a></p>
+</noscript>
+
+<!-- ANIMATED DEMO SCRIPT -->
+<script>
+(function(){
+  var body = document.getElementById('demoBody');
+  if(!body) return;
+
+  var lines = [
+    { delay:200,  html:'<span class="demo-prompt">$</span> auditor scan <span class="demo-url">https://acme-ecommerce.com</span>' },
+    { delay:600,  html:'<span class="demo-dim">Fetching page...</span>' },
+    { delay:300,  html:'<span class="demo-dim">Scanning DOM, JS objects, network patterns, cookies...</span>' },
+    { delay:200,  html:'', type:'progress' },
+    { delay:1200, html:'', type:'progress-fill' },
+    { delay:400,  html:'' },
+    { delay:100,  html:'<span class="demo-success">■</span> <span class="demo-highlight">TAG INVENTORY</span>' },
+    { delay:200,  html:'  <span class="demo-tag pass">GA4</span> G-AB12CD34EF &nbsp;— gtag.js via GTM, Enhanced Measurement ON' },
+    { delay:200,  html:'  <span class="demo-tag pass">GTM</span> GTM-W8XK2M &nbsp;&nbsp;— 14 tags, 9 triggers, 6 variables' },
+    { delay:200,  html:'  <span class="demo-tag pass">Meta</span> 1234567890 &nbsp;— fbevents.js, PageView ✓, Advanced Matching: em,ph' },
+    { delay:200,  html:'  <span class="demo-tag pass">GAds</span> AW-987654321 — Conversion tag + remarketing' },
+    { delay:200,  html:'  <span class="demo-tag warn">TikTok</span> CK8J2ABC &nbsp;&nbsp;— Base pixel only, <span class="demo-warn">no standard events</span>' },
+    { delay:200,  html:'  <span class="demo-tag fail">LinkedIn</span> <span class="demo-fail">NOT FOUND</span>' },
+    { delay:150,  html:'  <span class="demo-tag pass">Consent</span> Google Consent Mode v2 detected' },
+    { delay:400,  html:'' },
+    { delay:100,  html:'<span class="demo-success">■</span> <span class="demo-highlight">ISSUES FOUND: 4</span>' },
+    { delay:200,  html:'  <span class="demo-fail">CRITICAL</span> No <code>purchase</code> event in dataLayer (ecommerce site)' },
+    { delay:200,  html:'  <span class="demo-warn">HIGH</span> &nbsp;&nbsp;&nbsp;&nbsp;TikTok pixel missing AddToCart, Purchase events' },
+    { delay:200,  html:'  <span class="demo-warn">HIGH</span> &nbsp;&nbsp;&nbsp;&nbsp;LinkedIn Insight tag not installed' },
+    { delay:200,  html:'  <span class="demo-dim">MEDIUM</span> &nbsp;&nbsp;Meta CAPI not detected — client-side only' },
+    { delay:400,  html:'' },
+    { delay:100,  html:'<span class="demo-success">■</span> <span class="demo-highlight">REMEDIATION CODE GENERATED</span>' },
+    { delay:200,  html:'  → <span class="demo-success">dataLayer.push()</span> for purchase event &nbsp;<span class="demo-dim">// 14 lines, copy-paste ready</span>' },
+    { delay:200,  html:'  → <span class="demo-success">GTM container JSON</span> with tag + trigger &nbsp;<span class="demo-dim">// importable</span>' },
+    { delay:200,  html:'  → <span class="demo-success">TikTok event code</span> for AddToCart, Purchase &nbsp;<span class="demo-dim">// 8 lines</span>' },
+    { delay:200,  html:'  → <span class="demo-success">LinkedIn base tag</span> + conversion tracking &nbsp;<span class="demo-dim">// 12 lines</span>' },
+    { delay:400,  html:'' },
+    { delay:100,  html:'<span class="demo-prompt">Tag Health Score:</span> <span style="font-size:18px;font-weight:600;color:var(--amber)">74 / 100</span>  <span class="demo-warn">Grade: C</span> — Needs Attention' },
+    { delay:500,  html:'<span class="demo-dim">Scan complete in 2.4s · 6 tags detected · 4 issues · 4 fixes generated</span>' },
+  ];
+
+  var i = 0;
+  var totalDelay = 0;
+
+  function addLine(line){
+    if(line.type === 'progress'){
+      var div = document.createElement('div');
+      div.className = 'scan-progress';
+      div.innerHTML = '<div class="scan-bar" id="scanBar"></div>';
+      body.appendChild(div);
+      return;
+    }
+    if(line.type === 'progress-fill'){
+      var bar = document.getElementById('scanBar');
+      if(bar) bar.style.width = '100%';
+      return;
+    }
+    var div = document.createElement('div');
+    div.className = 'demo-line';
+    div.style.animationDelay = '0s';
+    div.innerHTML = line.html;
+    body.appendChild(div);
+    body.parentElement.scrollTop = body.parentElement.scrollHeight;
+  }
+
+  function runDemo(){
+    if(i >= lines.length){
+      // Loop after pause
+      setTimeout(function(){
+        body.innerHTML = '';
+        i = 0;
+        totalDelay = 0;
+        runDemo();
+      }, 6000);
+      return;
+    }
+    var line = lines[i];
+    totalDelay += line.delay;
+    setTimeout(function(){ addLine(line); }, 0);
+    i++;
+    setTimeout(runDemo, line.delay);
+  }
+
+  // Start after page load
+  setTimeout(runDemo, 800);
+})();
+
+// Scroll reveal
+(function(){
+  var els = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  els.forEach(function(el){ observer.observe(el); });
+})();
+</script>
+</body>
+</html>
