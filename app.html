@@ -801,9 +801,35 @@ async function runScan(){
     var isBlocked=(lc.indexOf('attention required')>-1&&lc.indexOf('cloudflare')>-1)||(lc.indexOf('just a moment')>-1&&lc.indexOf('enable javascript')>-1)||(lc.indexOf('checking your browser')>-1)||(lc.indexOf('ray id')>-1&&lc.indexOf('cloudflare')>-1&&html.length<15000)||(lc.indexOf('access denied')>-1&&lc.indexOf('incapsula')>-1)||(lc.indexOf('please wait while we verify')>-1)||(lc.indexOf('pardon our interruption')>-1);
     if(isBlocked){
       showP('progressBar','progressFill','statusMsg',30,'Bot protection detected — switching to Deep Scan...');
-      document.getElementById('scanBtn').disabled=false;
       await delay(500);
-      runPlaywrightScan();
+      /* Try Deep Scan, fall back to proxy results if it also fails */
+      try{
+        var pwUrl=getKey('pw_url')||PW_DEFAULT;
+        var ctrl=new AbortController(),tid=setTimeout(function(){ctrl.abort()},45000);
+        var resp=await fetch(pwUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url}),signal:ctrl.signal});
+        clearTimeout(tid);
+        if(!resp.ok)throw new Error('Worker returned '+resp.status);
+        showP('progressBar','progressFill','statusMsg',60,'Processing Deep Scan results...');
+        playwrightData=await resp.json();
+        if(!playwrightData.success)throw new Error(playwrightData.error||'Scan failed');
+        scanResult=scanHTML(playwrightData.html,url);
+        scanResult.playwright=playwrightData;
+        scanResult=mergePlaywrightIssues(scanResult);
+        showP('progressBar','progressFill','statusMsg',100,'Deep scan complete!');
+        await delay(400);hideP('progressBar','statusMsg');
+        renderResults(scanResult);
+      }catch(pwErr){
+        /* Deep Scan failed — show proxy results with WAF warning */
+        showP('progressBar','progressFill','statusMsg',70,'Deep Scan unavailable — analyzing proxy HTML...');
+        await delay(300);
+        scanResult=scanHTML(html,url);
+        scanResult.deepScanFailed=true;
+        scanResult.deepScanError=pwErr.message;
+        showP('progressBar','progressFill','statusMsg',100,'Complete (limited — bot protection blocked full scan)');
+        await delay(400);hideP('progressBar','statusMsg');
+        renderResults(scanResult);
+      }
+      document.getElementById('scanBtn').disabled=false;
       return;
     }
     showP('progressBar','progressFill','statusMsg',60,'Analyzing tags, social meta, SEO, schema...');
@@ -846,7 +872,22 @@ async function runPlaywrightScan(){
   }catch(e){
     hideP('progressBar','statusMsg');
     if(e.name==='AbortError'||e.message==='Failed to fetch'||e.message.indexOf('NetworkError')>-1){
-      if(confirm('Deep Scan worker is not available yet.\n\nThe Playwright worker at scan.googleadsagent.ai needs to be deployed first (see Playwright Setup guide).\n\nWould you like to run a standard proxy scan instead?')){runScan()}
+      if(confirm('Deep Scan worker is not reachable.\n\nWould you like to run a standard proxy scan instead?')){runScan()}
+    }else if(e.message.indexOf('500')>-1||e.message.indexOf('502')>-1||e.message.indexOf('503')>-1){
+      /* Worker crashed on this site — try proxy fallback */
+      showP('progressBar','progressFill','statusMsg',30,'Deep Scan failed on this site — trying proxy scan...');
+      try{
+        var html=await fetchViaProxy(url,function(m){showP('progressBar','progressFill','statusMsg',50,m)});
+        scanResult=scanHTML(html,url);
+        scanResult.deepScanFailed=true;
+        scanResult.deepScanError='Worker crashed ('+e.message+'). Showing proxy results.';
+        showP('progressBar','progressFill','statusMsg',100,'Complete (proxy fallback)');
+        await delay(400);hideP('progressBar','statusMsg');
+        renderResults(scanResult);
+      }catch(proxyErr){
+        hideP('progressBar','statusMsg');
+        alert('Both Deep Scan and proxy scan failed for this site.\n\nTry "Paste HTML" mode: right-click the page > View Source > copy all > paste here.');
+      }
     }else{alert('Deep Scan error: '+e.message+'\n\nTry the standard "Scan Page" button instead.')}
   }
 }
@@ -890,6 +931,9 @@ function renderResults(r){
   /* Export bar */
   if(r.blockedByWAF){
     h+='<div style="background:#7f1d1d;border:1px solid var(--red);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1rem"><strong style="color:var(--red)">&#9888; Bot Protection Detected ('+esc(r.wafType)+')</strong><p style="color:#fca5a5;font-size:.85rem;margin:.5rem 0 0">The proxy scan was blocked. Results below reflect the challenge page, not the real site. Use <strong>Deep Scan (Playwright)</strong> for accurate results.</p></div>';
+  }
+  if(r.deepScanFailed){
+    h+='<div style="background:#78350f;border:1px solid var(--amber);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1rem"><strong style="color:var(--amber)">&#9888; Deep Scan Failed — Showing Limited Results</strong><p style="color:#fcd34d;font-size:.85rem;margin:.5rem 0 0">'+esc(r.deepScanError||'The Playwright worker could not fully render this site.')+' Results below are from the HTML proxy scan. For best results, try <strong>Paste HTML</strong> mode (View Source → copy → paste).</p></div>';
   }
   h+='<div class="export-bar"><button class="export-btn" onclick="exportJSON()">Export JSON</button><button class="export-btn" onclick="exportCSV()">Export CSV</button><button class="export-btn" onclick="exportRemediation()">Remediation TXT</button><button class="export-btn" onclick="exportGTMContainer()">GTM Import JSON</button><button class="export-btn" onclick="exportDevHandoff()">Developer Handoff</button><button class="export-btn" onclick="window.print()">Print Report</button></div>';
 
