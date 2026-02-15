@@ -34,9 +34,13 @@ a{color:var(--amber);text-decoration:none}
 .url-input,.key-input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none;transition:border-color .2s}
 .url-input:focus,.key-input:focus{border-color:var(--amber)}
 .url-input::placeholder,.key-input::placeholder{color:#444}
+select.url-input{cursor:pointer}
 .scan-btn{background:var(--amber);color:var(--bg);border:none;border-radius:8px;padding:10px 24px;font-family:var(--font-mono);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
 .scan-btn:hover{background:var(--amber2)}
 .scan-btn:disabled{opacity:.5;cursor:not-allowed}
+.scan-btn.green{background:var(--green)}.scan-btn.green:hover{background:#22c55e}
+.scan-btn.blue{background:var(--blue);color:#000}.scan-btn.blue:hover{background:#3b82f6}
+.scan-btn.red{background:var(--red);color:#000}.scan-btn.red:hover{background:#ef4444}
 .mode-tabs{display:flex;gap:4px;margin-bottom:1rem}
 .mode-tab{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-family:var(--font-mono);font-size:11px;color:var(--text2);cursor:pointer;transition:all .2s}
 .mode-tab.active{background:var(--surface);border-color:var(--amber);color:var(--amber)}
@@ -94,6 +98,21 @@ a{color:var(--amber);text-decoration:none}
 .vision-item .v-event{font-family:var(--font-mono);font-size:12px;color:var(--cyan);min-width:140px;flex-shrink:0}
 .vision-item .v-desc{font-size:.85rem;color:var(--text2);flex:1}
 .vision-item .v-priority{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:4px;height:fit-content;flex-shrink:0}
+/* Pixel health bars */
+.pixel-bar{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin-top:4px;width:100%}
+.pixel-bar-fill{height:100%;border-radius:4px;transition:width .5s}
+/* Section headers in results */
+.section-header{font-size:.95rem;font-weight:500;margin:2rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.section-header .sec-icon{font-size:1.1rem}
+/* Auto-fix button */
+.fix-btn{background:var(--green);color:#000;border:none;border-radius:4px;padding:3px 10px;font-family:var(--font-mono);font-size:10px;cursor:pointer;margin-left:8px}
+.fix-btn:hover{background:#22c55e}
+.fix-btn:disabled{opacity:.4;cursor:not-allowed}
+/* GTM tag list */
+.gtm-tag{padding:10px 14px;background:var(--bg);border-radius:8px;margin-bottom:8px;border:1px solid var(--border)}
+.gtm-tag-name{font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--text)}
+.gtm-tag-type{font-family:var(--font-mono);font-size:11px;color:var(--cyan)}
+.gtm-tag-meta{font-size:.8rem;color:var(--text2);margin-top:4px}
 @media(max-width:640px){.input-row{flex-direction:column}.score-card{flex-direction:column;text-align:center}.tag-grid{grid-template-columns:1fr}.main-tabs{flex-direction:column}.key-row{flex-direction:column}}
 </style>
 </head>
@@ -111,6 +130,7 @@ a{color:var(--amber);text-decoration:none}
   <div class="main-tabs">
     <div class="main-tab active" onclick="showPanel('scan',this)"><span class="dot" style="background:var(--green)"></span> Page Scanner</div>
     <div class="main-tab" id="ga4Tab" onclick="showPanel('ga4',this)"><span class="dot"></span> GA4 Audit</div>
+    <div class="main-tab" id="gtmTab" onclick="showPanel('gtm',this)"><span class="dot"></span> GTM Audit</div>
     <div class="main-tab" id="visionTab" onclick="showPanel('vision',this)"><span class="dot"></span> AI Vision</div>
     <div class="main-tab" onclick="showPanel('settings',this)"><span class="dot"></span> Settings</div>
   </div>
@@ -119,7 +139,7 @@ a{color:var(--amber);text-decoration:none}
   <div class="tab-panel active" id="panel-scan">
     <div class="card">
       <h2>&#9889; Page Scanner</h2>
-      <p>Scan any page for GA4, GTM, and marketing pixels. Detect issues and get copy-paste remediation code.</p>
+      <p>Scan any page for GA4, GTM, marketing pixels, social meta, SEO, schema, ecommerce funnel, and performance. Get copy-paste remediation code + importable GTM JSON.</p>
       <div class="mode-tabs">
         <div class="mode-tab active" data-mode="url" onclick="setMode('url')">Scan URL</div>
         <div class="mode-tab" data-mode="html" onclick="setMode('html')">Paste HTML</div>
@@ -130,7 +150,11 @@ a{color:var(--amber);text-decoration:none}
           <input type="text" class="url-input" id="urlInput" placeholder="https://example.com" spellcheck="false" onkeydown="if(event.key==='Enter')runScan()">
           <button class="scan-btn" id="scanBtn" onclick="runScan()">Scan Page</button>
         </div>
-        <div class="proxy-note"><strong>How it works:</strong> We try multiple CORS proxies to fetch the page HTML. If all fail, use <strong>Paste HTML</strong> — right-click any page &rarr; View Page Source (Ctrl+U), copy all, paste here. All analysis runs in your browser — nothing is sent to our servers.</div>
+        <div id="playwrightBtn" style="display:none;margin-bottom:10px">
+          <button class="scan-btn blue" onclick="runPlaywrightScan()">&#9889; Deep Scan (Playwright)</button>
+          <span style="font-size:.75rem;color:var(--text2);margin-left:8px">Full JS rendering, network capture, Core Web Vitals</span>
+        </div>
+        <div class="proxy-note"><strong>How it works:</strong> We try multiple CORS proxies to fetch the page HTML. If all fail, use <strong>Paste HTML</strong>. For full JS rendering + network capture, set up a <strong>Playwright Worker</strong> in Settings. All analysis runs in your browser.</div>
       </div>
       <div id="htmlMode" style="display:none">
         <textarea class="html-input" id="htmlInput" placeholder="Paste the full HTML source code here..." style="display:block"></textarea>
@@ -140,7 +164,7 @@ a{color:var(--amber);text-decoration:none}
         </div>
       </div>
       <div id="demoMode" style="display:none">
-        <p style="font-size:.85rem;color:var(--text2);margin-bottom:10px">Run a demo scan on a simulated ecommerce site to see the full experience — tag detection, scoring, issues, and remediation code.</p>
+        <p style="font-size:.85rem;color:var(--text2);margin-bottom:10px">Run a demo scan on a simulated ecommerce site to see the full audit — tags, social meta, SEO, ecommerce funnel, schema, pixel health, performance, and remediation code.</p>
         <button class="scan-btn" onclick="runDemoScan()">&#9654; Run Demo Scan</button>
       </div>
     </div>
@@ -153,16 +177,17 @@ a{color:var(--amber);text-decoration:none}
   <div class="tab-panel" id="panel-ga4">
     <div class="card">
       <h2>&#128269; GA4 Property Audit &mdash; 40-Point Checklist</h2>
-      <p>Connect to the GA4 Admin API and run a comprehensive, read-only property health check.</p>
+      <p>Connect to the GA4 Admin API and run a comprehensive property health check. Optional: use analytics.edit scope to auto-fix issues.</p>
       <div class="key-saved" id="ga4KeySaved">&#10003; Access token saved for this session</div>
       <div class="key-help">
-        <strong>How to get your access token (takes 60 seconds):</strong><br>
+        <strong>How to get your access token (60 seconds):</strong><br>
         1. Open <a href="https://developers.google.com/oauthplayground/" target="_blank">Google OAuth Playground</a><br>
         2. In Step 1 &rarr; find <strong>Google Analytics Admin API v1beta</strong> &rarr; select <code>https://www.googleapis.com/auth/analytics.readonly</code><br>
-        3. Click <strong>Authorize APIs</strong> and sign in with your Google account<br>
+        &nbsp;&nbsp;&nbsp;&#8627; <em>For auto-fix: also select <code>analytics.edit</code> scope</em><br>
+        3. Click <strong>Authorize APIs</strong> and sign in<br>
         4. In Step 2 &rarr; click <strong>Exchange authorization code for tokens</strong><br>
-        5. Copy the <strong>Access token</strong> and paste it below<br><br>
-        <em style="color:var(--amber)">&#128274; Token expires in ~1 hour. Only stored in your browser tab &mdash; never sent to our servers. Read-only access &mdash; nothing is modified.</em>
+        5. Copy the <strong>Access token</strong> and paste below<br><br>
+        <em style="color:var(--amber)">&#128274; Token expires ~1 hour. Stored in browser tab only. Read-only by default.</em>
       </div>
       <div class="key-row">
         <input type="password" class="key-input" id="ga4Token" placeholder="Paste your GA4 access token...">
@@ -180,17 +205,48 @@ a{color:var(--amber);text-decoration:none}
     <div id="ga4Results" style="display:none"></div>
   </div>
 
+  <!-- ===== PANEL: GTM AUDIT ===== -->
+  <div class="tab-panel" id="panel-gtm">
+    <div class="card">
+      <h2>&#128230; GTM Container Audit</h2>
+      <p>Inspect every tag, trigger, variable, and folder in your GTM container. Detect unused tags, naming issues, and missing configurations.</p>
+      <div class="key-saved" id="gtmKeySaved">&#10003; GTM access token saved for this session</div>
+      <div class="key-help">
+        <strong>How to get your GTM access token:</strong><br>
+        1. Open <a href="https://developers.google.com/oauthplayground/" target="_blank">Google OAuth Playground</a><br>
+        2. In Step 1 &rarr; find <strong>Tag Manager API v2</strong> &rarr; select <code>https://www.googleapis.com/auth/tagmanager.readonly</code><br>
+        3. Click <strong>Authorize APIs</strong> and sign in<br>
+        4. In Step 2 &rarr; click <strong>Exchange authorization code for tokens</strong><br>
+        5. Copy the <strong>Access token</strong> and paste below<br><br>
+        <em style="color:var(--amber)">&#128274; Read-only access. Your container is never modified.</em>
+      </div>
+      <div class="key-row">
+        <input type="password" class="key-input" id="gtmToken" placeholder="Paste your GTM access token...">
+        <button class="scan-btn" onclick="saveGTMToken()" style="padding:10px 18px">Save &amp; Load Containers</button>
+      </div>
+      <div id="gtmContainerSelect" style="display:none;margin-bottom:1rem">
+        <div class="input-row">
+          <select class="url-input" id="gtmDropdown" style="cursor:pointer"><option>Loading containers...</option></select>
+          <button class="scan-btn" onclick="runGTMAudit()">Run Container Audit</button>
+        </div>
+      </div>
+    </div>
+    <div class="progress-bar" id="gtmPB"><div class="progress-fill" id="gtmPF"></div></div>
+    <div class="status-msg" id="gtmSM"></div>
+    <div id="gtmResults" style="display:none"></div>
+  </div>
+
   <!-- ===== PANEL: AI VISION ===== -->
   <div class="tab-panel" id="panel-vision">
     <div class="card">
       <h2>&#129302; AI Page Vision &mdash; Event Discovery</h2>
-      <p>AI analyzes a webpage to identify every trackable element and suggests GA4 events. Compares against your page scan to find gaps.</p>
+      <p>AI analyzes a webpage to identify every trackable element and suggests GA4 events with remediation code.</p>
       <div class="key-saved" id="visionKeySaved">&#10003; Gemini API key saved for this session</div>
       <div class="key-help">
         <strong>How to get your free Gemini API key:</strong><br>
         1. Go to <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a><br>
         2. Click <strong>Create API key</strong> and copy it<br><br>
-        <em style="color:var(--amber)">&#128274; Key stored in your browser tab only. API calls go directly from your browser to Google &mdash; we never see your key.</em>
+        <em style="color:var(--amber)">&#128274; Key stored in browser tab only. API calls go directly to Google.</em>
       </div>
       <div class="key-row">
         <input type="password" class="key-input" id="geminiKey" placeholder="Paste your Gemini API key...">
@@ -201,7 +257,6 @@ a{color:var(--amber);text-decoration:none}
           <input type="text" class="url-input" id="visionUrl" placeholder="URL to analyze (or leave blank to use last scanned page)">
           <button class="scan-btn" onclick="runVisionScan()">Analyze with AI</button>
         </div>
-        <p style="font-size:.8rem;color:var(--text2);margin-top:4px">AI identifies forms, CTAs, ecommerce elements, videos, and other interactive content that should be tracked &mdash; then maps them to GA4 event names.</p>
       </div>
     </div>
     <div class="progress-bar" id="visPB"><div class="progress-fill" id="visPF"></div></div>
@@ -213,12 +268,25 @@ a{color:var(--amber);text-decoration:none}
   <div class="tab-panel" id="panel-settings">
     <div class="card">
       <h2>&#9881; Session Settings</h2>
-      <p>All keys live in <code>sessionStorage</code> &mdash; your browser tab only. They vanish when you close the tab. Nothing is ever sent to our servers or stored permanently.</p>
+      <p>All keys live in <code>sessionStorage</code>. They vanish when you close the tab. Nothing is sent to our servers.</p>
+      <h3 style="font-size:.95rem;margin:1.5rem 0 .5rem">Playwright Worker URL</h3>
+      <p style="font-size:.8rem;color:var(--text2)">For deep scanning with full JS rendering. <a href="https://github.com/itallstartedwithaidea/analytics-auditor" target="_blank">Setup guide &rarr;</a></p>
+      <div class="key-row">
+        <input type="text" class="key-input" id="pwUrl" placeholder="https://auditor-scanner.YOUR-SUBDOMAIN.workers.dev" value="">
+        <button class="scan-btn" style="padding:10px 14px" onclick="saveKey('pw_url',document.getElementById('pwUrl').value);checkPW()">Save</button>
+        <button class="export-btn" style="padding:10px 14px" onclick="clearKey('pw_url');document.getElementById('pwUrl').value=''">Clear</button>
+      </div>
       <h3 style="font-size:.95rem;margin:1.5rem 0 .5rem">Google GA4 Access Token</h3>
       <div class="key-row">
         <input type="password" class="key-input" id="sGA4" placeholder="GA4 access token">
         <button class="scan-btn" style="padding:10px 14px" onclick="document.getElementById('ga4Token').value=document.getElementById('sGA4').value;saveGA4Token()">Save</button>
         <button class="export-btn" style="padding:10px 14px" onclick="clearKey('ga4_token');document.getElementById('sGA4').value=''">Clear</button>
+      </div>
+      <h3 style="font-size:.95rem;margin:1.5rem 0 .5rem">GTM Access Token</h3>
+      <div class="key-row">
+        <input type="password" class="key-input" id="sGTM" placeholder="GTM access token">
+        <button class="scan-btn" style="padding:10px 14px" onclick="document.getElementById('gtmToken').value=document.getElementById('sGTM').value;saveGTMToken()">Save</button>
+        <button class="export-btn" style="padding:10px 14px" onclick="clearKey('gtm_token');document.getElementById('sGTM').value=''">Clear</button>
       </div>
       <h3 style="font-size:.95rem;margin:1.5rem 0 .5rem">Gemini API Key (AI Vision)</h3>
       <div class="key-row">
@@ -235,516 +303,762 @@ a{color:var(--amber);text-decoration:none}
 
 <script>
 /* ===========================================================
-   GLOBALS
+   GLOBALS & UTILITIES
    =========================================================== */
 var scanResult = null;
+var playwrightData = null;
 
-/* ===========================================================
-   TAB / MODE NAVIGATION
-   =========================================================== */
-function showPanel(id, el) {
-  document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
-  document.querySelectorAll('.main-tab').forEach(function(t) { t.classList.remove('active'); });
-  document.getElementById('panel-' + id).classList.add('active');
-  if (el) el.classList.add('active');
-  if (id === 'settings') updateSessionStatus();
-}
-function setMode(m) {
-  document.querySelectorAll('.mode-tab').forEach(function(t) { t.classList.toggle('active', t.dataset.mode === m); });
-  document.getElementById('urlMode').style.display = m === 'url' ? '' : 'none';
-  document.getElementById('htmlMode').style.display = m === 'html' ? '' : 'none';
-  document.getElementById('demoMode').style.display = m === 'demo' ? '' : 'none';
-}
+function saveKey(k,v){sessionStorage.setItem(k,v)}
+function getKey(k){return sessionStorage.getItem(k)}
+function clearKey(k){sessionStorage.removeItem(k)}
+function clearAllKeys(){sessionStorage.clear();location.reload()}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function delay(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function downloadBlob(b,n){var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click()}
 
-/* ===========================================================
-   SESSION STORAGE
-   =========================================================== */
-function saveKey(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
-function getKey(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
-function clearKey(k) { try { sessionStorage.removeItem(k); } catch (e) {} }
-function clearAllKeys() { sessionStorage.clear(); location.reload(); }
-function updateSessionStatus() {
-  var g = getKey('ga4_token'), m = getKey('gemini_key');
-  document.getElementById('sessionStatus').innerHTML =
-    row(g, 'GA4 Access Token', g ? 'Saved (' + g.substring(0, 10) + '...)' : 'Not set') +
-    row(m, 'Gemini API Key', m ? 'Saved (' + m.substring(0, 10) + '...)' : 'Not set') +
-    row(scanResult, 'Last Page Scan', scanResult ? scanResult.url : 'None');
-  function row(ok, lbl, val) {
-    return '<div class="audit-row"><div class="audit-icon ' + (ok ? 'pass' : 'na') + '">' + (ok ? '&#10003;' : '&mdash;') + '</div><div class="audit-label">' + lbl + '</div><div class="audit-value">' + val + '</div></div>';
-  }
+function showP(pb,pf,sm,pct,msg){var b=document.getElementById(pb),f=document.getElementById(pf),s=document.getElementById(sm);b.style.display='';s.style.display='';f.style.width=pct+'%';s.textContent=msg}
+function hideP(pb,sm){document.getElementById(pb).style.display='none';document.getElementById(sm).style.display='none'}
+
+function showPanel(id,el){
+  document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.main-tab').forEach(function(t){t.classList.remove('active')});
+  document.getElementById('panel-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+}
+function setMode(m){
+  document.querySelectorAll('.mode-tab').forEach(function(t){t.classList.toggle('active',t.dataset.mode===m)});
+  document.getElementById('urlMode').style.display=m==='url'?'':'none';
+  document.getElementById('htmlMode').style.display=m==='html'?'':'none';
+  document.getElementById('demoMode').style.display=m==='demo'?'':'none';
 }
 
-/* ===========================================================
-   KEY MANAGEMENT
-   =========================================================== */
-function saveGA4Token() {
-  var t = document.getElementById('ga4Token').value.trim();
-  if (!t) { alert('Paste your GA4 access token first.'); return; }
-  saveKey('ga4_token', t);
-  document.getElementById('ga4KeySaved').style.display = 'block';
-  document.getElementById('ga4Tab').classList.add('has-key');
-  loadGA4Properties();
-}
-function saveGeminiKey() {
-  var k = document.getElementById('geminiKey').value.trim();
-  if (!k) { alert('Paste your Gemini API key first.'); return; }
-  saveKey('gemini_key', k);
-  document.getElementById('visionKeySaved').style.display = 'block';
-  document.getElementById('visionScanArea').style.display = 'block';
-  document.getElementById('visionTab').classList.add('has-key');
-}
-/* Restore on page load */
-(function() {
-  var g = getKey('ga4_token'), m = getKey('gemini_key');
-  if (g) { document.getElementById('ga4Token').value = g; document.getElementById('ga4KeySaved').style.display = 'block'; document.getElementById('ga4Tab').classList.add('has-key'); loadGA4Properties(); }
-  if (m) { document.getElementById('geminiKey').value = m; document.getElementById('visionKeySaved').style.display = 'block'; document.getElementById('visionScanArea').style.display = 'block'; document.getElementById('visionTab').classList.add('has-key'); }
+function checkPW(){var u=getKey('pw_url');document.getElementById('playwrightBtn').style.display=u?'':'none'}
+
+/* Session restore */
+(function(){
+  if(getKey('ga4_token')){document.getElementById('ga4KeySaved').style.display='';document.getElementById('ga4Tab').classList.add('has-key')}
+  if(getKey('gtm_token')){document.getElementById('gtmKeySaved').style.display='';document.getElementById('gtmTab').classList.add('has-key')}
+  if(getKey('gemini_key')){document.getElementById('visionKeySaved').style.display='';document.getElementById('visionTab').classList.add('has-key');document.getElementById('visionScanArea').style.display=''}
+  if(getKey('pw_url')){document.getElementById('pwUrl').value=getKey('pw_url')}
+  checkPW();
+  var st=document.getElementById('sessionStatus');
+  st.innerHTML=['ga4_token','gtm_token','gemini_key','pw_url'].map(function(k){
+    var v=getKey(k);return '<div class="audit-row"><div class="audit-icon '+(v?'pass':'na')+'">'+(v?'&#10003;':'&mdash;')+'</div><div class="audit-label">'+k+'</div><div class="audit-value">'+(v?(k.indexOf('token')>-1?'Saved ('+v.substring(0,8)+'...)':v.substring(0,30)):'Not set')+'</div></div>';
+  }).join('');
 })();
 
+function saveGA4Token(){var t=document.getElementById('ga4Token').value.trim();if(!t)return;saveKey('ga4_token',t);document.getElementById('ga4KeySaved').style.display='';document.getElementById('ga4Tab').classList.add('has-key');loadGA4Properties()}
+function saveGTMToken(){var t=document.getElementById('gtmToken').value.trim();if(!t)return;saveKey('gtm_token',t);document.getElementById('gtmKeySaved').style.display='';document.getElementById('gtmTab').classList.add('has-key');loadGTMContainers()}
+function saveGeminiKey(){var k=document.getElementById('geminiKey').value.trim();if(!k)return;saveKey('gemini_key',k);document.getElementById('visionKeySaved').style.display='';document.getElementById('visionTab').classList.add('has-key');document.getElementById('visionScanArea').style.display=''}
+
 /* ===========================================================
-   PROXY FETCH WITH MULTIPLE FALLBACKS
+   CORS PROXY CHAIN
    =========================================================== */
-var PROXIES = [
-  function(u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
-  function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
-  function(u) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); },
-  function(u) { return 'https://corsproxy.org/?' + encodeURIComponent(u); }
+var PROXIES=[
+  function(u){return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u)},
+  function(u){return 'https://corsproxy.io/?'+encodeURIComponent(u)},
+  function(u){return 'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u)},
+  function(u){return 'https://corsproxy.org/?'+encodeURIComponent(u)}
 ];
 
-async function fetchViaProxy(url, onStatus) {
-  for (var i = 0; i < PROXIES.length; i++) {
-    var purl = PROXIES[i](url);
-    if (onStatus) onStatus('Trying proxy ' + (i + 1) + '/' + PROXIES.length + '...');
-    try {
-      var ctrl = new AbortController();
-      var timer = setTimeout(function() { ctrl.abort(); }, 12000);
-      var resp = await fetch(purl, { signal: ctrl.signal });
-      clearTimeout(timer);
-      if (resp.ok) {
-        var text = await resp.text();
-        if (text.length > 100) return text;
-      }
-    } catch (e) { /* try next */ }
+async function fetchViaProxy(url,onStatus){
+  for(var i=0;i<PROXIES.length;i++){
+    if(onStatus)onStatus('Trying proxy '+(i+1)+'/'+PROXIES.length+'...');
+    try{
+      var ctrl=new AbortController(),tid=setTimeout(function(){ctrl.abort()},12000);
+      var resp=await fetch(PROXIES[i](url),{signal:ctrl.signal});
+      clearTimeout(tid);
+      if(!resp.ok)throw new Error(resp.status);
+      return await resp.text();
+    }catch(e){}
   }
-  throw new Error('All ' + PROXIES.length + ' proxies failed. Use the "Paste HTML" tab instead.');
+  throw new Error('All proxies failed. Use "Paste HTML" mode or set up a Playwright Worker in Settings.');
+}
+
+/* Fetch robots.txt and sitemap.xml */
+async function fetchRobots(baseUrl){
+  try{var t=await fetchViaProxy(baseUrl+'/robots.txt');return t.substring(0,2000)}catch(e){return null}
+}
+async function fetchSitemap(baseUrl){
+  try{var t=await fetchViaProxy(baseUrl+'/sitemap.xml');return t.substring(0,3000)}catch(e){return null}
 }
 
 /* ===========================================================
-   TAG DETECTION ENGINE
+   TAG DEFINITIONS — 10 Platforms
    =========================================================== */
-var TAG_DEFS = {
-  ga4: {
-    name: 'Google Analytics 4', short: 'GA4',
-    scripts: [/gtag\/js\?id=G-[A-Z0-9]+/i, /googletagmanager\.com\/gtag/],
-    globals: ['gtag', 'google_tag_data'], cookies: ['_ga', '_gid'],
-    extractId: function(h) { var m = h.match(/G-[A-Z0-9]{6,12}/g); return m ? unique(m) : []; },
-    checks: function(h) {
-      var r = [];
-      if (/enhanced.?measurement/i.test(h) || /page_view|scroll|click|file_download/.test(h)) r.push({ s: 'pass', t: 'Enhanced Measurement signals detected' });
-      if (/dataLayer\.push/.test(h)) r.push({ s: 'pass', t: 'dataLayer.push() calls found' });
-      if (!/purchase|add_to_cart|begin_checkout/i.test(h)) r.push({ s: 'warn', t: 'No ecommerce events in source' });
-      return r;
-    }
-  },
-  gtm: {
-    name: 'Google Tag Manager', short: 'GTM',
-    scripts: [/googletagmanager\.com\/gtm\.js\?id=GTM-[A-Z0-9]+/i],
-    globals: ['google_tag_manager', 'dataLayer'], cookies: [],
-    extractId: function(h) { var m = h.match(/GTM-[A-Z0-9]{6,8}/gi); return m ? unique(m) : []; },
-    checks: function(h) {
-      var r = [];
-      if (/dataLayer\s*=\s*\[/.test(h) || /dataLayer\.push/.test(h)) r.push({ s: 'pass', t: 'dataLayer initialized' });
-      else r.push({ s: 'warn', t: 'dataLayer not initialized before GTM' });
-      if (/<noscript[\s\S]*?googletagmanager[\s\S]*?<\/noscript>/i.test(h)) r.push({ s: 'pass', t: 'Noscript fallback present' });
-      else r.push({ s: 'warn', t: 'GTM noscript fallback missing' });
-      return r;
-    }
-  },
-  meta_pixel: {
-    name: 'Meta Pixel', short: 'Meta',
-    scripts: [/connect\.facebook\.net\/.*?\/fbevents\.js/i],
-    globals: ['fbq', '_fbq'], cookies: ['_fbp', '_fbc'],
-    extractId: function(h) { var m = h.match(/fbq\s*\(\s*['"]init['"]\s*,\s*['"](\d+)['"]/); return m ? [m[1]] : []; },
-    checks: function(h) {
-      var r = [];
-      if (/fbq\s*\(\s*['"]track['"]\s*,\s*['"]PageView['"]/i.test(h)) r.push({ s: 'pass', t: 'PageView event firing' });
-      else r.push({ s: 'warn', t: 'PageView event not detected' });
-      if (/fbq\s*\(\s*['"]init['"]\s*,\s*['"][\d]+['"]\s*,\s*\{/.test(h)) r.push({ s: 'pass', t: 'Advanced Matching configured' });
-      else r.push({ s: 'warn', t: 'Advanced Matching not configured' });
-      if (/fbq\s*\(\s*['"]track['"]\s*,\s*['"](Purchase|AddToCart|Lead|CompleteRegistration)/i.test(h)) r.push({ s: 'pass', t: 'Standard events found' });
-      else r.push({ s: 'warn', t: 'No standard events beyond PageView' });
-      return r;
-    }
-  },
-  google_ads: {
-    name: 'Google Ads', short: 'GAds',
-    scripts: [/gtag\/js\?id=AW-\d+/i],
-    globals: [], cookies: ['_gcl_aw', '_gcl_dc'],
-    extractId: function(h) { var m = h.match(/AW-\d+/g); return m ? unique(m) : []; },
-    checks: function(h) {
-      var r = [];
-      if (/send_to.*?AW-.*?\//.test(h)) r.push({ s: 'pass', t: 'Conversion tracking configured' });
-      else r.push({ s: 'warn', t: 'No conversion actions detected' });
-      if (/enhanced.?conversions|user_data/i.test(h)) r.push({ s: 'pass', t: 'Enhanced Conversions detected' });
-      else r.push({ s: 'warn', t: 'Enhanced Conversions not detected' });
-      return r;
-    }
-  },
-  tiktok: {
-    name: 'TikTok Pixel', short: 'TikTok',
-    scripts: [/analytics\.tiktok\.com\/i18n\/pixel\/events\.js/i],
-    globals: ['ttq'], cookies: ['_ttp'],
-    extractId: function(h) { var m = h.match(/ttq\.load\s*\(\s*['"]([A-Z0-9]+)['"]/i); return m ? [m[1]] : []; },
-    checks: function(h) {
-      var r = [];
-      if (/ttq\.(track|page)\s*\(/i.test(h)) r.push({ s: 'pass', t: 'Events being sent' });
-      else r.push({ s: 'warn', t: 'No events beyond base pixel' });
-      return r;
-    }
-  },
-  linkedin: {
-    name: 'LinkedIn Insight', short: 'LinkedIn',
-    scripts: [/snap\.licdn\.com\/li\.lms-analytics/i, /linkedin.*?insight/i],
-    globals: ['_linkedin_data_partner_ids', 'lintrk'], cookies: [],
-    extractId: function(h) { var m = h.match(/_linkedin_data_partner_ids\s*=\s*\[["']?(\d+)/); return m ? [m[1]] : []; },
-    checks: function() { return []; }
-  },
-  pinterest: {
-    name: 'Pinterest Tag', short: 'Pinterest',
-    scripts: [/pintrk/i, /ct\.pinterest\.com/i],
-    globals: ['pintrk'], cookies: [],
-    extractId: function(h) { var m = h.match(/pintrk\s*\(\s*['"]load['"]\s*,\s*['"](\d+)['"]/); return m ? [m[1]] : []; },
-    checks: function() { return []; }
-  },
-  snapchat: {
-    name: 'Snapchat Pixel', short: 'Snap',
-    scripts: [/sc-static\.net\/scevent\.min\.js/i],
-    globals: ['snaptr'], cookies: [],
-    extractId: function(h) { var m = h.match(/snaptr\s*\(\s*['"]init['"]\s*,\s*['"]([a-f0-9-]+)['"]/); return m ? [m[1]] : []; },
-    checks: function() { return []; }
-  },
-  twitter: {
-    name: 'X / Twitter Pixel', short: 'X',
-    scripts: [/static\.ads-twitter\.com\/uwt\.js/i],
-    globals: ['twq'], cookies: [],
-    extractId: function(h) { var m = h.match(/twq\s*\(\s*['"]init['"]\s*,\s*['"]([a-z0-9]+)['"]/i); return m ? [m[1]] : []; },
-    checks: function() { return []; }
-  },
-  microsoft_uet: {
-    name: 'Microsoft UET', short: 'UET',
-    scripts: [/bat\.bing\.com\/bat\.js/i],
-    globals: ['UET', 'uetq'], cookies: ['_uetmsclkid'],
-    extractId: function(h) { var m = h.match(/uetq.*?ti["':\s]+(\d+)/); if (m) return [m[1]]; m = h.match(/o\s*=\s*\{.*?ti\s*:\s*["'](\d+)["']/); return m ? [m[1]] : []; },
-    checks: function() { return []; }
-  }
+var TAG_DEFS={
+  ga4:{name:'Google Analytics 4',scriptPatterns:[/gtag\/js\?id=G-[A-Z0-9]+/,/googletagmanager\.com\/gtag/],globalObjects:['gtag','google_tag_data'],cookiePatterns:[/^_ga/],idPattern:/G-[A-Z0-9]{6,}/g},
+  gtm:{name:'Google Tag Manager',scriptPatterns:[/googletagmanager\.com\/gtm\.js\?id=GTM-[A-Z0-9]+/],globalObjects:['google_tag_manager','dataLayer'],idPattern:/GTM-[A-Z0-9]{4,}/g},
+  meta:{name:'Meta Pixel',scriptPatterns:[/connect\.facebook\.net\/.*\/fbevents\.js/],globalObjects:['fbq','_fbq'],cookiePatterns:[/^_fbp/,/^_fbc/],idPattern:/\b\d{15,16}\b/g},
+  gads:{name:'Google Ads',scriptPatterns:[/googleadservices\.com\/pagead\/conversion/,/gtag.*AW-/],globalObjects:['google_conversion_id'],idPattern:/AW-\d{8,}/g},
+  tiktok:{name:'TikTok Pixel',scriptPatterns:[/analytics\.tiktok\.com.*events\.js/],globalObjects:['ttq'],idPattern:/[A-Z0-9]{20}/g},
+  linkedin:{name:'LinkedIn Insight',scriptPatterns:[/snap\.licdn\.com\/li\.lms-analytics/],globalObjects:['_linkedin_data_partner_ids'],idPattern:/\b\d{6,8}\b/g},
+  pinterest:{name:'Pinterest Tag',scriptPatterns:[/pintrk/,/ct\.pinterest\.com/],globalObjects:['pintrk'],idPattern:/\b\d{13}\b/g},
+  snapchat:{name:'Snapchat Pixel',scriptPatterns:[/sc-static\.net\/scevent\.min\.js/],globalObjects:['snaptr'],idPattern:/[a-f0-9-]{36}/g},
+  twitter:{name:'Twitter/X Pixel',scriptPatterns:[/static\.ads-twitter\.com\/uwt\.js/],globalObjects:['twq'],idPattern:/[a-z0-9]{5,6}/g},
+  msft:{name:'Microsoft UET',scriptPatterns:[/bat\.bing\.com\/bat\.js/],globalObjects:['uetq'],idPattern:/\b\d{7,9}\b/g}
 };
 
-function unique(arr) { return arr.filter(function(v, i, a) { return a.indexOf(v) === i; }); }
-
-function detectConsent(html) {
-  var c = { detected: false, type: null };
-  if (/gtag\s*\(\s*['"]consent['"]\s*,\s*['"]default['"]/i.test(html) || /consent_mode/i.test(html)) { c.detected = true; c.type = 'Google Consent Mode v2'; }
-  if (/__tcfapi|tcf.*?api|iabtcf/i.test(html)) { c.detected = true; c.type = (c.type ? c.type + ' + ' : '') + 'TCF 2.0'; }
-  if (/cookie.?consent|consent.?banner|cookie.?notice|OneTrust|Cookiebot|cookie.?law/i.test(html)) { c.detected = true; if (!c.type) c.type = 'Cookie Banner'; }
-  return c;
-}
+/* ===========================================================
+   ECOMMERCE FUNNEL — GA4's 9-stage spec
+   =========================================================== */
+var ECOM_FUNNEL=[
+  {event:'view_item_list',desc:'Category / listing pages',stage:1},
+  {event:'select_item',desc:'User clicks a product from list',stage:2},
+  {event:'view_item',desc:'Product detail page',stage:3},
+  {event:'add_to_wishlist',desc:'Wishlist action',stage:3.5},
+  {event:'add_to_cart',desc:'Add to cart',stage:4},
+  {event:'view_cart',desc:'Cart page viewed',stage:5},
+  {event:'begin_checkout',desc:'Checkout started',stage:6},
+  {event:'add_shipping_info',desc:'Shipping info entered',stage:7},
+  {event:'add_payment_info',desc:'Payment info entered',stage:8},
+  {event:'purchase',desc:'Transaction complete',stage:9}
+];
 
 /* ===========================================================
-   PAGE SCAN ENGINE
+   ENHANCED scanHTML() — Full page audit
    =========================================================== */
-function scanHTML(html, url) {
-  var tags = {}, issues = [], totalScore = 100;
+function scanHTML(html,url){
+  var r={url:url||'unknown',html:html,tags:{},issues:[],score:100,consent:{detected:false,type:null},
+    social:{},seo:{},schema:[],ecommerce:{detected:false,events:[]},performance:{},deprecated:[],
+    duplicates:[],crossDomain:false,tagOrder:{dlBeforeGTM:null,gtmInHead:null}};
+  var lc=html.toLowerCase();
 
-  /* Detect all tags */
-  Object.keys(TAG_DEFS).forEach(function(key) {
-    var def = TAG_DEFS[key], found = false, method = null;
-    def.scripts.forEach(function(pat) { if (pat.test(html)) { found = true; method = 'script'; } });
-    if (!found && def.globals) {
-      def.globals.forEach(function(g) {
-        var pat = new RegExp('(window\\.)?' + g.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*[=\\(\\.]', 'i');
-        if (pat.test(html)) { found = true; method = 'global'; }
-      });
+  /* --- TAG DETECTION --- */
+  var tagCount=0;
+  Object.keys(TAG_DEFS).forEach(function(key){
+    var def=TAG_DEFS[key];
+    var found=false,ids=[],method='',checks=[];
+    def.scriptPatterns.forEach(function(p){if(p.test(html))found=true});
+    if(def.globalObjects)def.globalObjects.forEach(function(g){if(html.indexOf(g)>-1)found=true});
+    if(found&&def.idPattern){var m=html.match(def.idPattern);if(m)ids=m.filter(function(v,i,a){return a.indexOf(v)===i}).slice(0,5)}
+    if(found){
+      tagCount++;
+      method=html.indexOf('googletagmanager.com/gtm.js')>-1&&key!=='gtm'?'Via GTM':'Direct';
+      /* Platform-specific checks */
+      if(key==='ga4'){
+        checks.push(html.indexOf('config')>-1?{t:'Config call present',s:'pass'}:{t:'No config call detected',s:'warn'});
+        if(html.indexOf('enhanced_conversions')>-1||html.indexOf('user_data')>-1)checks.push({t:'Enhanced conversions configured',s:'pass'});
+      }
+      if(key==='meta'){
+        if(html.indexOf("fbq('track'")>-1||html.indexOf('fbq("track"')>-1)checks.push({t:'Standard events detected',s:'pass'});else checks.push({t:'No standard events — only PageView',s:'warn'});
+        if(html.indexOf('em:')>-1||html.indexOf("'em'")>-1)checks.push({t:'Advanced Matching configured',s:'pass'});else checks.push({t:'No Advanced Matching',s:'warn'});
+      }
+      if(key==='gads'){
+        if(html.indexOf('send_to')>-1)checks.push({t:'Conversion tracking active',s:'pass'});
+        if(html.indexOf('AW-')>-1&&html.indexOf('remarketing')>-1||html.indexOf('/pagead/viewthroughconversion')>-1)checks.push({t:'Remarketing tag detected',s:'pass'});else checks.push({t:'No remarketing tag detected',s:'warn'});
+        if(html.indexOf('enhanced_conversions')>-1)checks.push({t:'Enhanced conversions enabled',s:'pass'});else checks.push({t:'No enhanced conversions',s:'warn'});
+      }
+      if(key==='tiktok'){
+        if(html.indexOf("ttq.track")>-1)checks.push({t:'Standard events detected',s:'pass'});else checks.push({t:'No standard events',s:'warn'});
+      }
     }
-    var ids = def.extractId(html);
-    if (ids.length > 0) { found = true; if (!method) method = 'pattern'; }
-    var checks = found && def.checks ? def.checks(html) : [];
-    tags[key] = { key: key, name: def.name, short: def.short, found: found, method: method, ids: ids, checks: checks, cookies: def.cookies || [] };
+    r.tags[key]={name:def.name,found:found,ids:ids,method:method,checks:checks};
+  });
+  r.tagCount=tagCount;
+
+  /* --- PIXEL HEALTH SCORES (0-100 per platform) --- */
+  Object.keys(r.tags).forEach(function(key){
+    var t=r.tags[key],score=0;
+    if(!t.found){t.healthScore=0;return}
+    score+=30; /* Tag present */
+    if(t.checks.some(function(c){return c.s==='pass'&&/event/i.test(c.t)}))score+=20; /* Standard events */
+    if(key==='meta'&&(html.indexOf('em:')>-1))score+=20; /* Advanced Matching */
+    else if(key==='gads'&&html.indexOf('enhanced_conversions')>-1)score+=20;
+    else if(t.checks.length>1)score+=10;
+    if(html.indexOf('server')>-1||html.indexOf('capi')>-1||html.indexOf('conversions-api')>-1)score+=15; /* CAPI */
+    if(html.indexOf('event_id')>-1||html.indexOf('eventID')>-1)score+=10; /* Dedup */
+    if(r.consent.detected)score+=5; /* Consent */
+    t.healthScore=Math.min(100,score);
   });
 
-  var consent = detectConsent(html);
-  var isEcomm = /product|add.?to.?cart|checkout|purchase|price|shop|buy now|cart/i.test(html);
-  var isLead = /contact.?us|lead|inquiry|quote|schedule|book.*?(demo|call|meeting)|get.?started/i.test(html);
-  var isB2B = /b2b|enterprise|saas|software|platform|solution/i.test(html);
-
-  /* === ISSUES & REMEDIATION CODE === */
-
-  /* GA4 ecommerce issues */
-  if (tags.ga4.found && isEcomm && !/purchase/i.test(html)) {
-    issues.push({ sev: 'critical', title: 'No purchase event detected', desc: 'Ecommerce site without purchase tracking. This is your most important conversion event.',
-      fix: "// === REMEDIATION: purchase event ===\n// Place on order confirmation / thank-you page\n// Replace {{PLACEHOLDERS}} with your template variables\n\ndataLayer.push({ ecommerce: null }); // Clear previous\ndataLayer.push({\n  event: 'purchase',\n  ecommerce: {\n    transaction_id: '{{ORDER_ID}}',\n    value: {{ORDER_TOTAL}},\n    tax: {{TAX}},\n    shipping: {{SHIPPING}},\n    currency: 'USD',\n    coupon: '{{COUPON_CODE}}',\n    items: [{\n      item_id: '{{SKU}}',\n      item_name: '{{PRODUCT_NAME}}',\n      affiliation: '{{STORE_NAME}}',\n      price: {{PRICE}},\n      quantity: {{QTY}},\n      item_category: '{{CATEGORY}}',\n      item_brand: '{{BRAND}}'\n    }]\n  }\n});" });
-    totalScore -= 15;
-  }
-  if (tags.ga4.found && isEcomm && !/add_to_cart/i.test(html)) {
-    issues.push({ sev: 'high', title: 'No add_to_cart event detected', desc: 'Cannot measure cart abandonment without this.',
-      fix: "// === REMEDIATION: add_to_cart event ===\n// Fire when user clicks Add to Cart\n\ndataLayer.push({ ecommerce: null });\ndataLayer.push({\n  event: 'add_to_cart',\n  ecommerce: {\n    currency: 'USD',\n    value: {{PRICE}},\n    items: [{\n      item_id: '{{SKU}}',\n      item_name: '{{PRODUCT_NAME}}',\n      price: {{PRICE}},\n      quantity: 1\n    }]\n  }\n});" });
-    totalScore -= 10;
-  }
-  if (tags.ga4.found && isEcomm && !/view_item/i.test(html)) {
-    issues.push({ sev: 'high', title: 'No view_item event detected', desc: 'Product page views are essential for remarketing audiences.',
-      fix: "// === REMEDIATION: view_item event ===\n// Fire on product detail page load\n\ndataLayer.push({ ecommerce: null });\ndataLayer.push({\n  event: 'view_item',\n  ecommerce: {\n    currency: 'USD',\n    value: {{PRICE}},\n    items: [{\n      item_id: '{{SKU}}',\n      item_name: '{{PRODUCT_NAME}}',\n      price: {{PRICE}},\n      item_category: '{{CATEGORY}}'\n    }]\n  }\n});" });
-    totalScore -= 10;
-  }
-  if (tags.ga4.found && isEcomm && !/begin_checkout/i.test(html)) {
-    issues.push({ sev: 'medium', title: 'No begin_checkout event detected', desc: 'Needed to measure checkout funnel drop-off.',
-      fix: "// === REMEDIATION: begin_checkout event ===\n// Fire when user starts checkout\n\ndataLayer.push({ ecommerce: null });\ndataLayer.push({\n  event: 'begin_checkout',\n  ecommerce: {\n    currency: 'USD',\n    value: {{CART_TOTAL}},\n    items: [/* repeat for each item */{\n      item_id: '{{SKU}}',\n      item_name: '{{NAME}}',\n      price: {{PRICE}},\n      quantity: {{QTY}}\n    }]\n  }\n});" });
-    totalScore -= 5;
-  }
-
-  /* Lead gen issues */
-  if (tags.ga4.found && isLead && !/generate_lead|form_submit/i.test(html)) {
-    issues.push({ sev: 'high', title: 'No lead/form event detected', desc: 'Lead gen site missing generate_lead or form_submit event.',
-      fix: "// === REMEDIATION: generate_lead event ===\n// Fire on successful form submission\n\ndataLayer.push({\n  event: 'generate_lead',\n  currency: 'USD',\n  value: {{LEAD_VALUE}},\n  form_name: '{{FORM_NAME}}',\n  form_id: '{{FORM_ID}}',\n  lead_source: '{{SOURCE}}'\n});" });
-    totalScore -= 10;
-  }
-
-  /* Meta Pixel issues */
-  if (tags.meta_pixel.found) {
-    if (!/fbq\s*\(\s*['"]init['"]\s*,\s*['"][\d]+['"]\s*,\s*\{/.test(html)) {
-      issues.push({ sev: 'high', title: 'Meta Pixel: Advanced Matching not configured', desc: 'Improves attribution by 10-30%. Sends hashed customer data for better matching.',
-        fix: "// === REMEDIATION: Meta Advanced Matching ===\n// Replace your fbq('init') with this:\n\nfbq('init', '{{PIXEL_ID}}', {\n  em: '{{HASHED_EMAIL}}',       // sha256 lowercase email\n  ph: '{{HASHED_PHONE}}',       // sha256 phone E.164 format\n  fn: '{{FIRST_NAME}}',         // lowercase\n  ln: '{{LAST_NAME}}',          // lowercase\n  external_id: '{{USER_ID}}',   // your system user ID\n  ct: '{{CITY}}',               // lowercase, no spaces\n  st: '{{STATE}}',              // 2-letter code\n  zp: '{{ZIP}}',\n  country: 'us'\n});" });
-      totalScore -= 10;
-    }
-    if (!/facebook.*?connect.*?capi|server.?event|conversion.?api|_s2s/i.test(html)) {
-      issues.push({ sev: 'medium', title: 'Meta CAPI not detected (client-side only)', desc: 'Server-side events improve match rates 20-40% and work around ad blockers.',
-        fix: "// === REMEDIATION: Meta Conversions API (Node.js) ===\n// Server-side complement to your browser pixel\n\nconst bizSdk = require('facebook-nodejs-business-sdk');\nconst EventRequest = bizSdk.EventRequest;\nconst UserData = bizSdk.UserData;\nconst ServerEvent = bizSdk.ServerEvent;\n\nconst userData = (new UserData())\n  .setEmail('{{HASHED_EMAIL}}')\n  .setPhone('{{HASHED_PHONE}}')\n  .setClientIpAddress(req.ip)\n  .setClientUserAgent(req.headers['user-agent'])\n  .setFbp(req.cookies._fbp)\n  .setFbc(req.cookies._fbc);\n\nconst serverEvent = (new ServerEvent())\n  .setEventName('Purchase')\n  .setEventTime(Math.floor(Date.now() / 1000))\n  .setUserData(userData)\n  .setEventId('{{UNIQUE_EVENT_ID}}')\n  .setActionSource('website')\n  .setCustomData({ currency: 'USD', value: {{VALUE}} });\n\nconst evtReq = (new EventRequest('{{ACCESS_TOKEN}}', '{{PIXEL_ID}}'))\n  .setEvents([serverEvent]);\n\nawait evtReq.execute();\n\n// --- Python version ---\n# pip install facebook-business\n# from facebook_business.adobjects.serverside.event import Event\n# Similar pattern — see Meta docs for full example" });
-      totalScore -= 5;
-    }
-  }
-
-  /* Google Ads Enhanced Conversions */
-  if (tags.google_ads.found && !/enhanced.?conversions|user_data/i.test(html)) {
-    issues.push({ sev: 'medium', title: 'Google Ads: Enhanced Conversions not detected', desc: 'Send hashed first-party data for 5-15% more measured conversions.',
-      fix: "// === REMEDIATION: Google Enhanced Conversions ===\n// Place BEFORE the conversion event fires\n\ngtag('set', 'user_data', {\n  'email': '{{EMAIL}}',\n  'phone_number': '{{PHONE}}',\n  'address': {\n    'first_name': '{{FIRST_NAME}}',\n    'last_name': '{{LAST_NAME}}',\n    'street': '{{STREET}}',\n    'city': '{{CITY}}',\n    'region': '{{STATE}}',\n    'postal_code': '{{ZIP}}',\n    'country': 'US'\n  }\n});\n\n// Then fire your conversion:\ngtag('event', 'conversion', {\n  'send_to': '{{AW-ID}}/{{LABEL}}',\n  'value': {{VALUE}},\n  'currency': 'USD',\n  'transaction_id': '{{ORDER_ID}}'\n});" });
-    totalScore -= 5;
-  }
-
-  /* TikTok events */
-  if (tags.tiktok.found && !/ttq\.(track|page)\s*\(\s*['"](AddToCart|Purchase|SubmitForm|CompletePayment)/i.test(html)) {
-    issues.push({ sev: 'high', title: 'TikTok: No standard events beyond base pixel', desc: 'Base pixel only tracks PageView. Add conversion events.',
-      fix: "// === REMEDIATION: TikTok standard events ===\n\n// Add to Cart:\nttq.track('AddToCart', {\n  content_id: '{{SKU}}',\n  content_name: '{{PRODUCT_NAME}}',\n  content_type: 'product',\n  quantity: 1,\n  price: {{PRICE}},\n  value: {{PRICE}},\n  currency: 'USD'\n});\n\n// Purchase:\nttq.track('CompletePayment', {\n  content_id: '{{SKU}}',\n  content_type: 'product',\n  quantity: {{QTY}},\n  value: {{TOTAL}},\n  currency: 'USD'\n});\n\n// Lead / Form:\nttq.track('SubmitForm', {\n  content_name: '{{FORM_NAME}}'\n});" });
-    totalScore -= 10;
-  }
-
-  /* LinkedIn missing on B2B */
-  if (!tags.linkedin.found && isB2B) {
-    issues.push({ sev: 'high', title: 'LinkedIn Insight tag missing on B2B site', desc: 'Essential for B2B retargeting and company-level attribution.',
-      fix: "// === REMEDIATION: LinkedIn Insight Tag ===\n// Add to <head> of all pages:\n\n<scr" + "ipt type=\"text/javascript\">\n_linkedin_data_partner_ids = _linkedin_data_partner_ids || [];\n_linkedin_data_partner_ids.push({{PARTNER_ID}});\n(function(l) {\n  if (!l) {\n    window.lintrk = function(a,b){window.lintrk.q.push([a,b])};\n    window.lintrk.q = [];\n  }\n  var s = document.getElementsByTagName('scr' + 'ipt')[0];\n  var b = document.createElement('scr' + 'ipt');\n  b.type = 'text/javascript'; b.async = true;\n  b.src = 'https://snap.licdn.com/li.lms-analytics/insight.min.js';\n  s.parentNode.insertBefore(b, s);\n})(window.lintrk);\n</scr" + "ipt>" });
-    totalScore -= 10;
-  }
-
-  /* Consent */
-  if (!consent.detected) {
-    issues.push({ sev: 'medium', title: 'No consent management detected', desc: 'Required for GDPR/CCPA. Google requires Consent Mode v2 for EEA ad features.',
-      fix: "// === REMEDIATION: Google Consent Mode v2 ===\n// Add BEFORE your gtag.js or GTM container:\n\nwindow.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\n\n// Set restrictive defaults\ngtag('consent', 'default', {\n  'ad_storage': 'denied',\n  'ad_user_data': 'denied',\n  'ad_personalization': 'denied',\n  'analytics_storage': 'denied',\n  'wait_for_update': 500\n});\n\n// When user grants consent (via your CMP):\ngtag('consent', 'update', {\n  'ad_storage': 'granted',\n  'ad_user_data': 'granted',\n  'ad_personalization': 'granted',\n  'analytics_storage': 'granted'\n});" });
-    totalScore -= 5;
-  }
-
-  /* GTM noscript */
-  if (tags.gtm.found && !/<noscript[\s\S]*?googletagmanager[\s\S]*?<\/noscript>/i.test(html)) {
-    issues.push({ sev: 'low', title: 'GTM noscript fallback missing', desc: 'Add immediately after opening <body> tag.',
-      fix: "<!-- GTM noscript — add right after <body> -->\n<noscript><iframe src=\"https://www.googletagmanager.com/ns.html?id={{GTM_ID}}\"\nheight=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"></iframe></noscript>" });
-    totalScore -= 2;
-  }
-
-  /* dataLayer before GTM */
-  if (tags.gtm.found && !/dataLayer\s*=\s*\[/.test(html)) {
-    issues.push({ sev: 'medium', title: 'dataLayer not initialized before GTM', desc: 'Initialize dataLayer array before the GTM container snippet to prevent data loss.',
-      fix: "// Add this BEFORE your GTM container script:\n\nwindow.dataLayer = window.dataLayer || [];\n\n// Optionally push initial page data:\ndataLayer.push({\n  'page_type': '{{PAGE_TYPE}}',\n  'user_logged_in': {{TRUE_OR_FALSE}}\n});" });
-    totalScore -= 5;
-  }
-
-  totalScore = Math.max(0, Math.min(100, totalScore));
-  var grade = totalScore >= 90 ? 'A' : totalScore >= 80 ? 'B' : totalScore >= 70 ? 'C' : totalScore >= 60 ? 'D' : 'F';
-  var gradeLabel = totalScore >= 90 ? 'Excellent' : totalScore >= 80 ? 'Good' : totalScore >= 70 ? 'Needs Attention' : totalScore >= 60 ? 'Significant Issues' : 'Critical';
-  return {
-    url: url, scannedAt: new Date().toISOString(), tags: tags, consent: consent,
-    issues: issues, score: totalScore, grade: grade, gradeLabel: gradeLabel,
-    tagCount: Object.values(tags).filter(function(t) { return t.found; }).length,
-    issueCount: issues.length
+  /* --- SOCIAL META (OG + Twitter) --- */
+  var ogMatch=function(prop){var m=html.match(new RegExp('<meta[^>]+(?:property|name)=["\']'+prop+'["\'][^>]+content=["\']([^"\']*)["\']','i'));return m?m[1]:null};
+  r.social={
+    ogTitle:ogMatch('og:title'),ogDesc:ogMatch('og:description'),ogImage:ogMatch('og:image'),
+    ogType:ogMatch('og:type'),ogUrl:ogMatch('og:url'),ogSiteName:ogMatch('og:site_name'),
+    twCard:ogMatch('twitter:card'),twTitle:ogMatch('twitter:title'),twImage:ogMatch('twitter:image'),
+    twSite:ogMatch('twitter:site')
   };
+
+  /* --- SEO META --- */
+  var titleMatch=html.match(/<title[^>]*>([^<]*)<\/title>/i);
+  var descMatch=ogMatch('description')||null;
+  var canonMatch=html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']*)/i);
+  var viewportMatch=ogMatch('viewport');
+  var robotsMeta=ogMatch('robots');
+  var hreflangMatch=html.match(/<link[^>]+hreflang/gi);
+  var h1Match=html.match(/<h1[^>]*>/gi);
+  var langMatch=html.match(/<html[^>]+lang=["']([^"']*)/i);
+  r.seo={
+    title:titleMatch?titleMatch[1].trim():null,
+    titleLength:titleMatch?titleMatch[1].trim().length:0,
+    metaDesc:descMatch,metaDescLength:descMatch?descMatch.length:0,
+    canonical:canonMatch?canonMatch[1]:null,
+    viewport:viewportMatch||null,
+    robots:robotsMeta,
+    hreflangCount:hreflangMatch?hreflangMatch.length:0,
+    h1Count:h1Match?h1Match.length:0,
+    lang:langMatch?langMatch[1]:null
+  };
+
+  /* --- SCHEMA.ORG / JSON-LD --- */
+  var jsonLdBlocks=html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  if(jsonLdBlocks){
+    jsonLdBlocks.forEach(function(block){
+      var content=block.replace(/<script[^>]*>/i,'').replace(/<\/script>/i,'').trim();
+      try{var parsed=JSON.parse(content);r.schema.push(parsed)}catch(e){}
+    });
+  }
+  /* Also check for microdata */
+  r.hasMicrodata=lc.indexOf('itemscope')>-1;
+
+  /* --- ECOMMERCE FUNNEL DETECTION --- */
+  var dlContent=html.match(/dataLayer\.push\(\s*\{[\s\S]*?\}\s*\)/g)||[];
+  var allDlText=dlContent.join(' ');
+  r.ecommerce.detected=lc.indexOf('product')>-1||lc.indexOf('cart')>-1||lc.indexOf('checkout')>-1||lc.indexOf('shop')>-1||lc.indexOf('ecommerce')>-1||lc.indexOf('price')>-1;
+  ECOM_FUNNEL.forEach(function(stage){
+    var found=allDlText.indexOf("'"+stage.event+"'")>-1||allDlText.indexOf('"'+stage.event+'"')>-1||html.indexOf(stage.event)>-1;
+    r.ecommerce.events.push({event:stage.event,desc:stage.desc,stage:stage.stage,found:found});
+  });
+
+  /* --- CONSENT DETECTION --- */
+  if(lc.indexOf('cookiebot')>-1||lc.indexOf('cookieconsent')>-1)r.consent={detected:true,type:'Cookiebot'};
+  else if(lc.indexOf('onetrust')>-1||lc.indexOf('optanon')>-1)r.consent={detected:true,type:'OneTrust'};
+  else if(lc.indexOf('trustarc')>-1||lc.indexOf('truste')>-1)r.consent={detected:true,type:'TrustArc'};
+  else if(lc.indexOf('iubenda')>-1)r.consent={detected:true,type:'iubenda'};
+  else if(lc.indexOf('consent')>-1&&lc.indexOf('cookie')>-1)r.consent={detected:true,type:'Custom/Unknown'};
+
+  /* Consent Mode v2 check */
+  r.consentModeV2=lc.indexOf('ad_storage')>-1&&lc.indexOf('analytics_storage')>-1;
+  r.consentModeComplete=r.consentModeV2&&lc.indexOf('ad_user_data')>-1&&lc.indexOf('ad_personalization')>-1;
+
+  /* --- DEPRECATED TAGS --- */
+  if(html.match(/analytics\.js/)||html.match(/UA-\d{4,}-\d/))r.deprecated.push({tag:'Universal Analytics (analytics.js)',detail:'UA was sunset July 2024. Remove to reduce page weight.',ids:html.match(/UA-\d{4,}-\d+/g)||[]});
+  if(html.match(/dc\.js/))r.deprecated.push({tag:'DoubleClick Floodlight (dc.js)',detail:'Deprecated. Migrate to Google Ads conversion tracking.'});
+  if(html.match(/fbds\.js/))r.deprecated.push({tag:'Legacy Facebook Pixel (fbds.js)',detail:'Migrate to modern fbevents.js pixel.'});
+  if(html.match(/conversion\.js/))r.deprecated.push({tag:'Legacy Google Conversion (conversion.js)',detail:'Migrate to gtag.js.'});
+
+  /* --- DUPLICATE / CONFLICTING CONTAINERS --- */
+  var gtmIds=html.match(/GTM-[A-Z0-9]{4,}/g)||[];
+  var ga4Ids=html.match(/G-[A-Z0-9]{6,}/g)||[];
+  var metaIds=html.match(/fbq\(['"]init['"],\s*['"](\d{15,16})['"]/g)||[];
+  gtmIds=gtmIds.filter(function(v,i,a){return a.indexOf(v)===i});
+  ga4Ids=ga4Ids.filter(function(v,i,a){return a.indexOf(v)===i});
+  if(gtmIds.length>1)r.duplicates.push({type:'Multiple GTM containers',ids:gtmIds,severity:'critical'});
+  if(ga4Ids.length>1)r.duplicates.push({type:'Multiple GA4 measurement IDs',ids:ga4Ids,severity:'high'});
+
+  /* --- CROSS-DOMAIN TRACKING --- */
+  r.crossDomain=html.indexOf('linker')>-1||html.indexOf('auto_link_domains')>-1||html.indexOf('allowLinker')>-1;
+  var crossDomainDomains=html.match(/domains\s*:\s*\[([^\]]+)\]/);
+  r.crossDomainDomains=crossDomainDomains?crossDomainDomains[1]:'';
+
+  /* --- TAG FIRING ORDER --- */
+  var dlInitPos=html.indexOf('dataLayer');
+  var gtmPos=html.indexOf('googletagmanager.com/gtm.js');
+  if(dlInitPos>-1&&gtmPos>-1)r.tagOrder.dlBeforeGTM=dlInitPos<gtmPos;
+  var headEnd=lc.indexOf('</head>');
+  r.tagOrder.gtmInHead=gtmPos>-1&&gtmPos<headEnd;
+
+  /* --- PERFORMANCE SIGNALS --- */
+  var scripts=html.match(/<script[^>]*>/gi)||[];
+  var inlineScripts=scripts.filter(function(s){return !(/src=/i.test(s))}).length;
+  var externalScripts=scripts.length-inlineScripts;
+  var renderBlocking=scripts.filter(function(s){return !(/async|defer/i.test(s))&&/src=/i.test(s)}).length;
+  var images=html.match(/<img[^>]*>/gi)||[];
+  var lazyImages=images.filter(function(i){return /loading=["']lazy/i.test(i)}).length;
+  r.performance={
+    totalScripts:scripts.length,inlineScripts:inlineScripts,externalScripts:externalScripts,
+    renderBlocking:renderBlocking,
+    totalImages:images.length,lazyImages:lazyImages,nonLazyImages:images.length-lazyImages,
+    estimatedSize:Math.round(html.length/1024)+'KB (HTML only)',
+    http2:null /* Can only detect from Playwright */
+  };
+
+  /* --- SERVER-SIDE GTM DETECTION --- */
+  r.serverSideGTM=lc.indexOf('sgtm')>-1||lc.indexOf('server-side')>-1||(function(){
+    var m=html.match(/https?:\/\/[a-z0-9.-]+\/gtm\.js/gi);
+    return m&&m.some(function(u){return u.indexOf('googletagmanager.com')===-1});
+  })();
+
+  /* --- ISSUE GENERATION --- */
+  /* Consent */
+  if(!r.consent.detected)r.issues.push({sev:'high',title:'No consent management detected',desc:'EU/UK/CA regulations require user consent before firing tracking pixels. Implement a CMP.',fix:'<!-- Google Consent Mode v2 Default -->\n<scr'+'ipt>\nwindow.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag("consent", "default", {\n  ad_storage: "denied",\n  ad_user_data: "denied",\n  ad_personalization: "denied",\n  analytics_storage: "denied",\n  functionality_storage: "denied",\n  personalization_storage: "denied",\n  security_storage: "granted",\n  wait_for_update: 500\n});\n</scr'+'ipt>\n\n<!-- Update on consent grant -->\ngtag("consent", "update", {\n  ad_storage: "granted",\n  ad_user_data: "granted",\n  ad_personalization: "granted",\n  analytics_storage: "granted"\n});'});
+  else if(!r.consentModeV2)r.issues.push({sev:'medium',title:'Consent Mode v2 not detected',desc:'Google requires Consent Mode v2 for EU users as of March 2024.',fix:'gtag("consent", "default", {\n  ad_storage: "denied",\n  ad_user_data: "denied",\n  ad_personalization: "denied",\n  analytics_storage: "denied"\n});'});
+  else if(!r.consentModeComplete)r.issues.push({sev:'low',title:'Consent Mode v2 missing some consent types',desc:'Add ad_user_data and ad_personalization for full compliance.'});
+
+  /* Tags */
+  if(!r.tags.ga4.found)r.issues.push({sev:'critical',title:'GA4 not detected',desc:'No Google Analytics 4 tag found on the page.',fix:'<!-- GA4 Installation -->\n<scr'+'ipt async src="https://www.googletagmanager.com/gtag/js?id={{GA4_MEASUREMENT_ID}}"></scr'+'ipt>\n<scr'+'ipt>\nwindow.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag("js", new Date());\ngtag("config", "{{GA4_MEASUREMENT_ID}}");\n</scr'+'ipt>'});
+  if(!r.tags.gtm.found&&tagCount>2)r.issues.push({sev:'high',title:'No GTM container — '+tagCount+' tags loaded directly',desc:'Use Google Tag Manager to manage all marketing tags. Reduces page weight and enables version control.',fix:'<!-- GTM Head -->\n<scr'+'ipt>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({"gtm.start":\nnew Date().getTime(),event:"gtm.js"});var f=d.getElementsByTagName(s)[0],\nj=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=\n"https://www.googletagmanager.com/gtm.js?id="+i+dl;f.parentNode.insertBefore(j,f);\n})(window,document,"script","dataLayer","{{GTM_CONTAINER_ID}}");</scr'+'ipt>\n\n<!-- GTM Body (immediately after <body>) -->\n<noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{GTM_CONTAINER_ID}}"\nheight="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>'});
+  if(!r.tags.meta.found)r.issues.push({sev:'medium',title:'Meta Pixel not detected',desc:'Required for Facebook/Instagram advertising.',fix:'<!-- Meta Pixel -->\n<scr'+'ipt>\n!function(f,b,e,v,n,t,s)\n{if(f.fbq)return;n=f.fbq=function(){n.callMethod?\nn.callMethod.apply(n,arguments):n.queue.push(arguments)};\nif(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";\nn.queue=[];t=b.createElement(e);t.async=!0;\nt.src=v;s=b.getElementsByTagName(e)[0];\ns.parentNode.insertBefore(t,s)}(window, document,"script",\n"https://connect.facebook.net/en_US/fbevents.js");\nfbq("init", "{{META_PIXEL_ID}}");\nfbq("track", "PageView");\n</scr'+'ipt>'});
+
+  /* Deprecated */
+  r.deprecated.forEach(function(d){r.issues.push({sev:'medium',title:'Deprecated: '+d.tag,desc:d.detail+(d.ids?' IDs: '+d.ids.join(', '):'')})});
+
+  /* Duplicates */
+  r.duplicates.forEach(function(d){r.issues.push({sev:d.severity,title:d.type+' detected',desc:'IDs found: '+d.ids.join(', ')+'. This can cause double-counting and inflated metrics. Remove duplicates.'})});
+
+  /* Tag firing order */
+  if(r.tagOrder.dlBeforeGTM===false)r.issues.push({sev:'high',title:'dataLayer initialized AFTER GTM loads',desc:'GTM may miss early dataLayer events. Initialize dataLayer before GTM.',fix:'<!-- Place BEFORE your GTM snippet -->\n<scr'+'ipt>\nwindow.dataLayer = window.dataLayer || [];\n</scr'+'ipt>'});
+  if(r.tagOrder.gtmInHead===false&&r.tags.gtm.found)r.issues.push({sev:'medium',title:'GTM is not in <head>',desc:'GTM should be in <head> for earliest possible execution. Tags may fire late.'});
+
+  /* Social */
+  if(!r.social.ogTitle)r.issues.push({sev:'medium',title:'Missing og:title',desc:'Links shared on Facebook/LinkedIn will have no custom title.',fix:'<meta property="og:title" content="{{PAGE_TITLE}}">'});
+  if(!r.social.ogDesc)r.issues.push({sev:'medium',title:'Missing og:description',desc:'Social shares will have no description.',fix:'<meta property="og:description" content="{{PAGE_DESCRIPTION}}">'});
+  if(!r.social.ogImage)r.issues.push({sev:'high',title:'Missing og:image',desc:'Social shares will have no image. This dramatically reduces click-through rates.',fix:'<meta property="og:image" content="{{IMAGE_URL_1200x630}}">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">'});
+  if(!r.social.twCard)r.issues.push({sev:'low',title:'Missing twitter:card',desc:'X/Twitter shares won\'t show rich card preview.',fix:'<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:title" content="{{PAGE_TITLE}}">\n<meta name="twitter:image" content="{{IMAGE_URL}}">'});
+
+  /* SEO */
+  if(!r.seo.title)r.issues.push({sev:'critical',title:'Missing <title> tag',desc:'Critical for SEO. Every page needs a unique title tag.'});
+  else if(r.seo.titleLength<30)r.issues.push({sev:'medium',title:'Title tag too short ('+r.seo.titleLength+' chars)',desc:'Aim for 50-60 characters for optimal SEO display.'});
+  else if(r.seo.titleLength>60)r.issues.push({sev:'low',title:'Title tag may truncate ('+r.seo.titleLength+' chars)',desc:'Google typically shows 50-60 characters.'});
+  if(!r.seo.metaDesc)r.issues.push({sev:'high',title:'Missing meta description',desc:'Search engines show this in results. Aim for 120-160 characters.',fix:'<meta name="description" content="{{PAGE_DESCRIPTION_120_160_CHARS}}">'});
+  else if(r.seo.metaDescLength<100)r.issues.push({sev:'low',title:'Meta description too short ('+r.seo.metaDescLength+' chars)',desc:'Aim for 120-160 characters.'});
+  if(!r.seo.canonical)r.issues.push({sev:'medium',title:'Missing canonical tag',desc:'Helps prevent duplicate content issues.',fix:'<link rel="canonical" href="{{CANONICAL_URL}}">'});
+  if(!r.seo.viewport)r.issues.push({sev:'high',title:'Missing viewport meta',desc:'Required for mobile-responsive design.',fix:'<meta name="viewport" content="width=device-width, initial-scale=1.0">'});
+  if(r.seo.h1Count===0)r.issues.push({sev:'medium',title:'No H1 tag found',desc:'Each page should have exactly one H1.'});
+  else if(r.seo.h1Count>1)r.issues.push({sev:'low',title:'Multiple H1 tags ('+r.seo.h1Count+')',desc:'Best practice is one H1 per page.'});
+  if(!r.seo.lang)r.issues.push({sev:'medium',title:'Missing lang attribute on <html>',desc:'Helps screen readers and search engines.',fix:'<html lang="en">'});
+
+  /* Schema */
+  if(r.schema.length===0&&!r.hasMicrodata)r.issues.push({sev:'medium',title:'No structured data (Schema.org)',desc:'Add JSON-LD structured data for rich search results.',fix:'<scr'+'ipt type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "{{COMPANY_NAME}}",\n  "url": "{{WEBSITE_URL}}",\n  "logo": "{{LOGO_URL}}",\n  "sameAs": [\n    "{{FACEBOOK_URL}}",\n    "{{TWITTER_URL}}",\n    "{{LINKEDIN_URL}}"\n  ]\n}\n</scr'+'ipt>'});
+
+  /* Ecommerce */
+  if(r.ecommerce.detected){
+    var found=r.ecommerce.events.filter(function(e){return e.found}).length;
+    var missing=r.ecommerce.events.filter(function(e){return !e.found});
+    if(found===0)r.issues.push({sev:'critical',title:'Ecommerce site with NO GA4 ecommerce events',desc:'Detected ecommerce signals but no GA4 ecommerce events (purchase, add_to_cart, etc.).'});
+    missing.forEach(function(e){
+      var sev=e.event==='purchase'?'critical':e.stage>=6?'high':e.stage>=3?'medium':'low';
+      r.issues.push({sev:sev,title:'Missing ecommerce event: '+e.event,desc:e.desc,
+        fix:'dataLayer.push({\n  event: "'+e.event+'",\n  ecommerce: {\n    '+(/purchase/.test(e.event)?'transaction_id: "{{ORDER_ID}}",\n    value: {{ORDER_TOTAL}},\n    currency: "USD",\n    items: [{\n      item_id: "{{SKU}}",\n      item_name: "{{NAME}}",\n      price: {{PRICE}},\n      quantity: {{QTY}}\n    }]':
+        /add_to_cart|remove_from_cart/.test(e.event)?'items: [{\n      item_id: "{{SKU}}",\n      item_name: "{{NAME}}",\n      price: {{PRICE}},\n      quantity: 1\n    }]':
+        /view_item/.test(e.event)?'items: [{\n      item_id: "{{SKU}}",\n      item_name: "{{NAME}}",\n      price: {{PRICE}},\n      item_category: "{{CATEGORY}}"\n    }]':
+        /begin_checkout/.test(e.event)?'value: {{CART_TOTAL}},\n    currency: "USD",\n    items: [/* cart items */]':
+        'items: [{\n      item_id: "{{SKU}}",\n      item_name: "{{NAME}}"\n    }]')+'\n  }\n});',
+        gtmJson:buildGTMJson(e.event)
+      });
+    });
+  }
+
+  /* Performance */
+  if(r.performance.renderBlocking>3)r.issues.push({sev:'medium',title:r.performance.renderBlocking+' render-blocking scripts',desc:'Add async or defer to non-critical scripts.'});
+  if(r.performance.totalScripts>20)r.issues.push({sev:'high',title:r.performance.totalScripts+' total scripts on page',desc:'Consider consolidating via GTM or removing unused scripts.'});
+  if(r.performance.nonLazyImages>10)r.issues.push({sev:'low',title:r.performance.nonLazyImages+' images without lazy loading',desc:'Add loading="lazy" to below-fold images.'});
+
+  /* Cross-domain note */
+  if(r.crossDomain)r.issues.push({sev:'low',title:'Cross-domain tracking configured',desc:'Domains: '+r.crossDomainDomains+'. Verify all domains are correct.'});
+
+  /* Server-side GTM note */
+  if(r.serverSideGTM)r.issues.push({sev:'low',title:'Server-side GTM detected',desc:'Good! First-party data collection via server-side GTM.'});
+
+  /* Score calculation */
+  r.issues.forEach(function(i){
+    if(i.sev==='critical')r.score-=15;
+    else if(i.sev==='high')r.score-=10;
+    else if(i.sev==='medium')r.score-=5;
+    else r.score-=2;
+  });
+  r.score=Math.max(0,r.score);
+  r.grade=r.score>=90?'A':r.score>=80?'B':r.score>=70?'C':r.score>=60?'D':'F';
+  r.gradeLabel=r.score>=90?'Excellent':r.score>=80?'Good':r.score>=70?'Needs Work':r.score>=60?'Poor':'Critical';
+  r.issueCount=r.issues.length;
+
+  return r;
 }
 
 /* ===========================================================
-   PROGRESS HELPERS
+   GTM CONTAINER JSON GENERATOR
    =========================================================== */
-function showP(pb, pf, sm, pct, msg) {
-  document.getElementById(pb).style.display = '';
-  document.getElementById(pf).style.width = pct + '%';
-  if (msg) { document.getElementById(sm).style.display = ''; document.getElementById(sm).textContent = msg; }
+function buildGTMJson(eventName){
+  var triggerId='trig_'+eventName;
+  return JSON.stringify({
+    exportFormatVersion:2,
+    containerVersion:{tag:[{
+      name:'GA4 Event - '+eventName,
+      type:'gaawe',
+      parameter:[
+        {type:'TEMPLATE',key:'eventName',value:eventName},
+        {type:'TEMPLATE',key:'measurementIdOverride',value:'{{GA4 Measurement ID}}'}
+      ],
+      firingTriggerId:[triggerId]
+    }],
+    trigger:[{
+      name:eventName+' - dataLayer Event',
+      type:'customEvent',
+      triggerId:triggerId,
+      customEventFilter:[{type:'EQUALS',parameter:[{type:'TEMPLATE',key:'arg0',value:'{{_event}}'},{type:'TEMPLATE',key:'arg1',value:eventName}]}]
+    }],
+    variable:[{
+      name:'GA4 Measurement ID',
+      type:'c',
+      parameter:[{type:'TEMPLATE',key:'value',value:'G-XXXXXXXXXX'}]
+    }]}
+  },null,2);
 }
-function hideP(pb, sm) {
-  document.getElementById(pb).style.display = 'none';
-  document.getElementById(sm).style.display = 'none';
+
+function buildFullGTMExport(issues){
+  var tags=[],triggers=[],variables=[],trigId=100;
+  /* Always include measurement ID variable */
+  variables.push({name:'GA4 Measurement ID',type:'c',parameter:[{type:'TEMPLATE',key:'value',value:'G-XXXXXXXXXX'}]});
+  issues.forEach(function(issue){
+    if(!issue.gtmJson)return;
+    var evName=issue.title.replace('Missing ecommerce event: ','').replace('Missing ','');
+    if(!/^[a-z_]+$/.test(evName))return;
+    trigId++;
+    triggers.push({name:evName+' - dataLayer',type:'customEvent',triggerId:String(trigId),
+      customEventFilter:[{type:'EQUALS',parameter:[{type:'TEMPLATE',key:'arg0',value:'{{_event}}'},{type:'TEMPLATE',key:'arg1',value:evName}]}]});
+    tags.push({name:'GA4 - '+evName,type:'gaawe',
+      parameter:[{type:'TEMPLATE',key:'eventName',value:evName},{type:'TEMPLATE',key:'measurementIdOverride',value:'{{GA4 Measurement ID}}'}],
+      firingTriggerId:[String(trigId)]});
+  });
+  return JSON.stringify({exportFormatVersion:2,containerVersion:{tag:tags,trigger:triggers,variable:variables}},null,2);
 }
 
 /* ===========================================================
    SCAN RUNNERS
    =========================================================== */
-async function runScan() {
-  var url = document.getElementById('urlInput').value.trim();
-  if (!url) return;
-  if (!/^https?:\/\//.test(url)) url = 'https://' + url;
-  var btn = document.getElementById('scanBtn');
-  btn.disabled = true; btn.textContent = 'Scanning...';
-  showP('progressBar', 'progressFill', 'statusMsg', 15, 'Fetching page via proxy...');
-  try {
-    var html = await fetchViaProxy(url, function(msg) { showP('progressBar', 'progressFill', 'statusMsg', 40, msg); });
-    showP('progressBar', 'progressFill', 'statusMsg', 75, 'Analyzing tags and pixels...');
+async function runScan(){
+  var url=document.getElementById('urlInput').value.trim();
+  if(!url)return;if(url.indexOf('http')!==0)url='https://'+url;
+  document.getElementById('scanBtn').disabled=true;
+  showP('progressBar','progressFill','statusMsg',10,'Fetching page via proxy...');
+  try{
+    var html=await fetchViaProxy(url,function(m){showP('progressBar','progressFill','statusMsg',20,m)});
+    showP('progressBar','progressFill','statusMsg',60,'Analyzing tags, social meta, SEO, schema...');
+    await delay(300);
+    scanResult=scanHTML(html,url);
+    showP('progressBar','progressFill','statusMsg',90,'Generating results...');
     await delay(200);
-    scanResult = scanHTML(html, url);
-    showP('progressBar', 'progressFill', 'statusMsg', 100, 'Scan complete!');
-    await delay(400);
-    hideP('progressBar', 'statusMsg');
+    showP('progressBar','progressFill','statusMsg',100,'Complete!');
+    await delay(400);hideP('progressBar','statusMsg');
     renderResults(scanResult);
-  } catch (e) {
-    hideP('progressBar', 'statusMsg');
-    alert(e.message);
-  }
-  btn.disabled = false; btn.textContent = 'Scan Page';
+  }catch(e){hideP('progressBar','statusMsg');alert('Scan failed: '+e.message)}
+  document.getElementById('scanBtn').disabled=false;
 }
 
-function runHtmlScan() {
-  var html = document.getElementById('htmlInput').value;
-  var url = document.getElementById('htmlUrlInput').value.trim() || 'pasted-source';
-  if (!html) { alert('Paste the HTML source code first.'); return; }
-  showP('progressBar', 'progressFill', 'statusMsg', 50, 'Analyzing tags...');
-  setTimeout(function() {
-    scanResult = scanHTML(html, url);
-    showP('progressBar', 'progressFill', 'statusMsg', 100, 'Done!');
-    setTimeout(function() { hideP('progressBar', 'statusMsg'); renderResults(scanResult); }, 300);
-  }, 150);
+function runHtmlScan(){
+  var html=document.getElementById('htmlInput').value;
+  if(!html||html.length<50){alert('Paste at least 50 characters of HTML');return}
+  var url=document.getElementById('htmlUrlInput').value.trim()||'pasted-html';
+  scanResult=scanHTML(html,url);renderResults(scanResult);
 }
 
-function runDemoScan() {
-  var demoHtml = [
-    'gtag("js",new Date());gtag("config","G-AB12CD34EF");',
-    'googletagmanager.com/gtm.js?id=GTM-W8XK2M window.dataLayer=[];dataLayer.push({"event":"page_view"});',
-    '<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W8XK2M"></noscript>',
-    "fbq('init','1234567890',{em:'test@email.com'});fbq('track','PageView');connect.facebook.net/en_US/fbevents.js",
-    'AW-987654321 send_to:"AW-987654321/abc123"',
-    'analytics.tiktok.com/i18n/pixel/events.js ttq.load("CK8J2ABC123");ttq.page();',
-    'product add-to-cart checkout price shop buy cart software enterprise saas platform solution',
-    'contact us schedule demo get started inquiry'
-  ].join(' ');
+async function runPlaywrightScan(){
+  var url=document.getElementById('urlInput').value.trim();
+  if(!url)return;if(url.indexOf('http')!==0)url='https://'+url;
+  var pwUrl=getKey('pw_url');if(!pwUrl){alert('Set your Playwright Worker URL in Settings first.');return}
+  showP('progressBar','progressFill','statusMsg',10,'Sending to Playwright Worker...');
+  try{
+    var resp=await fetch(pwUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url})});
+    if(!resp.ok)throw new Error('Worker returned '+resp.status);
+    showP('progressBar','progressFill','statusMsg',50,'Processing Playwright results...');
+    playwrightData=await resp.json();
+    if(!playwrightData.success)throw new Error(playwrightData.error||'Scan failed');
+    scanResult=scanHTML(playwrightData.html,url);
+    scanResult.playwright=playwrightData;
+    showP('progressBar','progressFill','statusMsg',100,'Deep scan complete!');
+    await delay(400);hideP('progressBar','statusMsg');
+    renderResults(scanResult);
+  }catch(e){hideP('progressBar','statusMsg');alert('Playwright scan failed: '+e.message)}
+}
 
-  showP('progressBar', 'progressFill', 'statusMsg', 10, 'Loading demo site...');
-  var steps = [
-    [300, 25, 'Scanning DOM for script tags...'],
-    [300, 40, 'Inspecting JavaScript global objects...'],
-    [300, 55, 'Matching network request patterns...'],
-    [300, 70, 'Checking cookie signatures...'],
-    [400, 85, 'Detecting consent management...'],
-    [300, 95, 'Generating remediation code...']
-  ];
-  var i = 0;
-  (function next() {
-    if (i >= steps.length) {
-      showP('progressBar', 'progressFill', 'statusMsg', 100, 'Complete!');
-      setTimeout(function() {
-        hideP('progressBar', 'statusMsg');
-        scanResult = scanHTML(demoHtml, 'https://acme-ecommerce.com');
-        renderResults(scanResult);
-      }, 400);
-      return;
-    }
-    var s = steps[i++];
-    setTimeout(function() { showP('progressBar', 'progressFill', 'statusMsg', s[1], s[2]); next(); }, s[0]);
+function runDemoScan(){
+  var demoHtml='<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Acme Ecommerce Store - Shop Premium Products Online</title><meta name="description" content="Shop premium products at Acme Ecommerce. Free shipping on orders over $50."><meta property="og:title" content="Acme Ecommerce - Premium Products"><meta property="og:description" content="Shop the best products online"><meta property="og:type" content="website"><meta name="twitter:card" content="summary_large_image"><link rel="canonical" href="https://acme-ecommerce.com">';
+  demoHtml+='<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Acme Ecommerce","url":"https://acme-ecommerce.com"}</scr'+'ipt>';
+  demoHtml+='</head><body><h1>Welcome to Acme Ecommerce</h1>';
+  demoHtml+='<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-DEMO12345");</scr'+'ipt>';
+  demoHtml+='<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({"gtm.start":new Date().getTime(),event:"gtm.js"});var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;j.src="https://www.googletagmanager.com/gtm.js?id="+i;f.parentNode.insertBefore(j,f);})(window,document,"script","dataLayer","GTM-W8XK2M");</scr'+'ipt>';
+  demoHtml+="<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','1234567890',{em:'test@email.com'});fbq('track','PageView');</scr"+"ipt>";
+  demoHtml+='<script>dataLayer.push({event:"view_item",ecommerce:{items:[{item_id:"SKU001",item_name:"Test Product",price:29.99}]}});</scr'+'ipt>';
+  demoHtml+='<script src="https://www.googleadservices.com/pagead/conversion/AW-987654321/?label=abc123&send_to=AW-987654321/abc123"></scr'+'ipt>';
+  demoHtml+='<script>!function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments)},s.version="1.1",s.queue=[],u=t.createElement(n),u.async=!0,u.src="https://static.ads-twitter.com/uwt.js",a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,"script");twq("init","tw123");</scr'+'ipt>';
+  demoHtml+='<script src="https://analytics.tiktok.com/i18n/pixel/events.js"></scr'+'ipt><script>ttq.load("CK8J2ABC123");ttq.page();</scr'+'ipt>';
+  demoHtml+='<script src="https://snap.licdn.com/li.lms-analytics/insight.min.js"></scr'+'ipt>';
+  demoHtml+='<div class="products"><div class="product" data-price="29.99">Product 1</div><div class="product" data-price="49.99">Product 2</div><button class="add-to-cart">Add to Cart</button><a href="/checkout">Checkout</a><a href="/cart">View Cart</a></div>';
+  demoHtml+='<form action="/contact"><input type="email" name="email"><button type="submit">Contact Us</button></form>';
+  demoHtml+='<a href="tel:+15551234567">Call Us</a><a href="mailto:info@acme.com">Email Us</a>';
+  demoHtml+='</body></html>';
+
+  showP('progressBar','progressFill','statusMsg',10,'Loading demo...');
+  var steps=[[200,25,'Scanning tags...'],[200,40,'Checking social meta...'],[200,55,'Auditing SEO...'],[200,70,'Detecting ecommerce funnel...'],[200,85,'Checking schema & performance...'],[200,95,'Generating remediation...']];
+  var i=0;
+  (function next(){
+    if(i>=steps.length){showP('progressBar','progressFill','statusMsg',100,'Complete!');setTimeout(function(){hideP('progressBar','statusMsg');scanResult=scanHTML(demoHtml,'https://acme-ecommerce.com');renderResults(scanResult)},400);return}
+    var s=steps[i++];setTimeout(function(){showP('progressBar','progressFill','statusMsg',s[1],s[2]);next()},s[0]);
   })();
 }
-
-function delay(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
-
 /* ===========================================================
-   RENDER PAGE SCAN RESULTS
+   RENDER PAGE SCAN RESULTS — Full Audit View
    =========================================================== */
-function renderResults(r) {
-  var el = document.getElementById('results');
-  el.style.display = '';
-  var scClass = r.score >= 90 ? 'score-a' : r.score >= 80 ? 'score-b' : r.score >= 70 ? 'score-c' : 'score-d';
-  var html = '';
+function renderResults(r){
+  var el=document.getElementById('results');el.style.display='';
+  var scClass=r.score>=90?'score-a':r.score>=80?'score-b':r.score>=70?'score-c':'score-d';
+  var h='';
 
   /* Score card */
-  html += '<div class="score-card"><div class="score-circle ' + scClass + '"><div class="num">' + r.score + '</div><div class="grade">' + r.grade + '</div></div><div class="score-meta"><h3>Tag Health Score: ' + r.gradeLabel + '</h3><p>' + esc(r.url) + '</p><div class="score-summary"><span style="color:var(--green)">&#10003; ' + r.tagCount + ' tags</span><span style="color:' + (r.issueCount ? 'var(--red)' : 'var(--green)') + '">' + r.issueCount + ' issues</span><span style="color:var(--text2)">' + (r.consent.detected ? '&#128274; ' + r.consent.type : '&#9888; No consent') + '</span></div></div></div>';
+  h+='<div class="score-card"><div class="score-circle '+scClass+'"><div class="num">'+r.score+'</div><div class="grade">'+r.grade+'</div></div><div class="score-meta"><h3>Tag Health Score: '+r.gradeLabel+'</h3><p>'+esc(r.url)+'</p><div class="score-summary"><span style="color:var(--green)">&#10003; '+r.tagCount+' tags</span><span style="color:'+(r.issueCount?'var(--red)':'var(--green)')+'">'+r.issueCount+' issues</span><span style="color:var(--text2)">'+(r.consent.detected?'&#128274; '+r.consent.type:'&#9888; No consent')+'</span>'+(r.ecommerce.detected?'<span style="color:var(--purple)">&#128722; Ecommerce</span>':'')+'</div></div></div>';
 
   /* Export bar */
-  html += '<div class="export-bar"><button class="export-btn" onclick="exportJSON()">Export JSON</button><button class="export-btn" onclick="exportCSV()">Export CSV</button><button class="export-btn" onclick="exportRemediation()">Download Remediation Code</button><button class="export-btn" onclick="window.print()">Print Report</button></div>';
+  h+='<div class="export-bar"><button class="export-btn" onclick="exportJSON()">Export JSON</button><button class="export-btn" onclick="exportCSV()">Export CSV</button><button class="export-btn" onclick="exportRemediation()">Remediation TXT</button><button class="export-btn" onclick="exportGTMContainer()">GTM Import JSON</button><button class="export-btn" onclick="exportDevHandoff()">Developer Handoff</button><button class="export-btn" onclick="window.print()">Print Report</button></div>';
 
-  /* Tag grid */
-  html += '<h3 style="font-size:.95rem;margin-bottom:.75rem;font-weight:500">Detected Tags</h3><div class="tag-grid">';
-  Object.values(r.tags).forEach(function(t) {
-    var st = t.found ? (t.checks.some(function(c) { return c.s === 'warn'; }) ? 'partial' : 'found') : 'missing';
-    var stTxt = t.found ? (st === 'partial' ? 'PARTIAL' : 'DETECTED') : 'NOT FOUND';
-    var det = '';
-    if (t.found) {
-      if (t.ids.length) det += 'ID: <code>' + t.ids.join(', ') + '</code><br>';
-      if (t.method) det += 'Loaded via: ' + t.method + '<br>';
-      t.checks.forEach(function(c) { det += (c.s === 'pass' ? '<span style="color:var(--green)">&#10003;</span> ' : '<span style="color:var(--amber)">&#9888;</span> ') + c.t + '<br>'; });
-    } else { det = 'Not detected in page source'; }
-    html += '<div class="tag-card"><div class="tag-header"><span class="tag-name">' + t.name + '</span><span class="tag-status ' + st + '">' + stTxt + '</span></div><div class="tag-details">' + det + '</div></div>';
+  /* ===== SECTION: Detected Tags with Pixel Health ===== */
+  h+='<div class="section-header"><span class="sec-icon">&#128301;</span> Detected Tags &amp; Pixel Health</div><div class="tag-grid">';
+  Object.values(r.tags).forEach(function(t){
+    var st=t.found?(t.checks.some(function(c){return c.s==='warn'})?'partial':'found'):'missing';
+    var stTxt=t.found?(st==='partial'?'PARTIAL':'DETECTED'):'NOT FOUND';
+    var det='';
+    if(t.found){
+      if(t.ids.length)det+='ID: <code>'+t.ids.join(', ')+'</code><br>';
+      if(t.method)det+='Loaded via: '+t.method+'<br>';
+      t.checks.forEach(function(c){det+=(c.s==='pass'?'<span style="color:var(--green)">&#10003;</span> ':'<span style="color:var(--amber)">&#9888;</span> ')+c.t+'<br>'});
+      /* Pixel health bar */
+      var hc=t.healthScore>=80?'var(--green)':t.healthScore>=50?'var(--amber)':'var(--red)';
+      det+='<div style="margin-top:8px;font-family:var(--font-mono);font-size:11px">Health: <strong style="color:'+hc+'">'+t.healthScore+'/100</strong></div><div class="pixel-bar"><div class="pixel-bar-fill" style="width:'+t.healthScore+'%;background:'+hc+'"></div></div>';
+    }else{det='Not detected in page source'}
+    h+='<div class="tag-card"><div class="tag-header"><span class="tag-name">'+t.name+'</span><span class="tag-status '+st+'">'+stTxt+'</span></div><div class="tag-details">'+det+'</div></div>';
   });
-  html += '</div>';
+  h+='</div>';
 
-  /* Issues */
-  if (r.issues.length) {
-    html += '<div class="issues-section"><h3>Issues &amp; Remediation (' + r.issues.length + ')</h3>';
-    r.issues.forEach(function(issue, idx) {
-      var fid = 'fix_' + idx;
-      html += '<div class="issue-item"><span class="issue-sev ' + issue.sev + '">' + issue.sev.toUpperCase() + '</span><div class="issue-body"><h4>' + issue.title + '</h4><p>' + issue.desc + '</p>';
-      if (issue.fix) html += '<span class="fix-toggle" onclick="toggleFix(\'' + fid + '\')">&#9654; Show remediation code</span><div class="fix-code" id="' + fid + '"><button class="copy-btn" onclick="copyFix(\'' + fid + '\')">Copy</button>' + esc(issue.fix) + '</div>';
-      html += '</div></div>';
+  /* ===== SECTION: Social Sharing Meta ===== */
+  h+='<div class="section-header"><span class="sec-icon">&#128279;</span> Social Sharing (Open Graph &amp; Twitter)</div>';
+  h+='<div class="audit-grid">';
+  var sm=r.social;
+  [['og:title',sm.ogTitle],['og:description',sm.ogDesc],['og:image',sm.ogImage],['og:type',sm.ogType],['og:url',sm.ogUrl],['og:site_name',sm.ogSiteName],['twitter:card',sm.twCard],['twitter:title',sm.twTitle],['twitter:image',sm.twImage],['twitter:site',sm.twSite]].forEach(function(pair){
+    var st=pair[1]?'pass':'warn';
+    h+='<div class="audit-row"><div class="audit-icon '+st+'">'+(pair[1]?'&#10003;':'&#9888;')+'</div><div class="audit-label">'+pair[0]+'</div><div class="audit-value">'+(pair[1]?esc(String(pair[1]).substring(0,60)):'<span style="color:var(--red)">Missing</span>')+'</div></div>';
+  });
+  h+='</div>';
+
+  /* ===== SECTION: SEO Health ===== */
+  h+='<div class="section-header"><span class="sec-icon">&#128270;</span> SEO Health</div>';
+  h+='<div class="audit-grid">';
+  var se=r.seo;
+  h+=auditRow(se.title?'pass':(se.title===null?'fail':'warn'),'Title tag',se.title?esc(se.title.substring(0,60))+' ('+se.titleLength+' chars)':'Missing');
+  h+=auditRow(se.metaDesc?'pass':'fail','Meta description',se.metaDesc?esc(se.metaDesc.substring(0,60))+'... ('+se.metaDescLength+' chars)':'Missing');
+  h+=auditRow(se.canonical?'pass':'warn','Canonical tag',se.canonical?esc(se.canonical.substring(0,50)):'Not set');
+  h+=auditRow(se.viewport?'pass':'fail','Viewport meta',se.viewport||'Missing');
+  h+=auditRow(se.h1Count===1?'pass':(se.h1Count===0?'warn':'warn'),'H1 tags',se.h1Count+' found'+(se.h1Count===1?' (good)':se.h1Count===0?' (add one)':' (use only one)'));
+  h+=auditRow(se.lang?'pass':'warn','HTML lang attribute',se.lang||'Not set');
+  h+=auditRow(se.robots?'pass':'na','Robots meta',se.robots||'Not set (default: index, follow)');
+  h+=auditRow(se.hreflangCount>0?'pass':'na','Hreflang tags',se.hreflangCount>0?se.hreflangCount+' language(s)':'None');
+  h+='</div>';
+
+  /* ===== SECTION: Schema / Structured Data ===== */
+  h+='<div class="section-header"><span class="sec-icon">&#128202;</span> Structured Data (Schema.org)</div>';
+  if(r.schema.length>0){
+    h+='<div class="audit-grid">';
+    r.schema.forEach(function(s){
+      var type=s['@type']||(Array.isArray(s['@graph'])?'Graph ('+s['@graph'].length+' items)':'Unknown');
+      h+=auditRow('pass','JSON-LD: '+type,s.name||s.headline||s.url||'');
+      if(Array.isArray(s['@graph'])){s['@graph'].forEach(function(g){h+=auditRow('pass','\u2192 '+g['@type'],g.name||g.url||'')})}
     });
-    html += '</div>';
+    h+='</div>';
+  }else if(r.hasMicrodata){
+    h+=auditRow('pass','Microdata detected','itemscope found in HTML');
+  }else{
+    h+='<div class="audit-grid">'+auditRow('warn','No structured data found','Add JSON-LD for rich search results')+'</div>';
   }
 
-  el.innerHTML = html;
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  /* ===== SECTION: Ecommerce Funnel ===== */
+  if(r.ecommerce.detected){
+    var eFound=r.ecommerce.events.filter(function(e){return e.found}).length;
+    h+='<div class="section-header"><span class="sec-icon">&#128722;</span> Ecommerce Funnel ('+eFound+'/'+r.ecommerce.events.length+' stages)</div>';
+    h+='<div class="audit-grid">';
+    r.ecommerce.events.forEach(function(e){
+      h+=auditRow(e.found?'pass':'fail',e.event,e.found?'Detected':'Missing — '+e.desc);
+    });
+    h+='</div>';
+  }
+
+  /* ===== SECTION: Playwright Data (if available) ===== */
+  if(r.playwright){
+    var pw=r.playwright;
+    h+='<div class="section-header"><span class="sec-icon">&#9889;</span> Deep Scan (Playwright)</div>';
+
+    /* Core Web Vitals */
+    if(pw.vitals){
+      h+='<h4 style="font-size:.85rem;margin:.5rem 0;color:var(--cyan)">Core Web Vitals</h4><div class="audit-grid">';
+      var v=pw.vitals;
+      if(v.lcp!==undefined)h+=auditRow(v.lcp<2500?'pass':v.lcp<4000?'warn':'fail','LCP (Largest Contentful Paint)',Math.round(v.lcp)+'ms'+(v.lcp<2500?' (Good)':v.lcp<4000?' (Needs Improvement)':' (Poor)'));
+      if(v.cls!==undefined)h+=auditRow(v.cls<0.1?'pass':v.cls<0.25?'warn':'fail','CLS (Cumulative Layout Shift)',v.cls.toFixed(3)+(v.cls<0.1?' (Good)':v.cls<0.25?' (Needs Improvement)':' (Poor)'));
+      if(v.fcp!==undefined)h+=auditRow(v.fcp<1800?'pass':v.fcp<3000?'warn':'fail','FCP (First Contentful Paint)',Math.round(v.fcp)+'ms');
+      if(v.ttfb!==undefined)h+=auditRow(v.ttfb<800?'pass':v.ttfb<1800?'warn':'fail','TTFB (Time to First Byte)',Math.round(v.ttfb)+'ms');
+      if(v.domContentLoaded)h+=auditRow('na','DOM Content Loaded',Math.round(v.domContentLoaded)+'ms');
+      if(v.loadComplete)h+=auditRow('na','Load Complete',Math.round(v.loadComplete)+'ms');
+      h+='</div>';
+    }
+
+    /* Network requests to analytics */
+    if(pw.analyticsRequests&&pw.analyticsRequests.length>0){
+      h+='<h4 style="font-size:.85rem;margin:1rem 0 .5rem;color:var(--cyan)">Analytics Network Requests ('+pw.analyticsRequests.length+')</h4><div class="audit-grid">';
+      pw.analyticsRequests.forEach(function(req){
+        h+=auditRow('pass',req.platform||'Unknown',esc(req.url.substring(0,80))+'...');
+      });
+      h+='</div>';
+    }
+
+    /* dataLayer events captured */
+    if(pw.dataLayerEvents&&pw.dataLayerEvents.length>0){
+      h+='<h4 style="font-size:.85rem;margin:1rem 0 .5rem;color:var(--cyan)">dataLayer Events Captured ('+pw.dataLayerEvents.length+')</h4><div class="audit-grid">';
+      pw.dataLayerEvents.forEach(function(evt){
+        h+=auditRow('pass',evt.event||'(push)',JSON.stringify(evt).substring(0,80)+'...');
+      });
+      h+='</div>';
+    }
+
+    /* Console errors */
+    if(pw.consoleLogs&&pw.consoleLogs.length>0){
+      h+='<h4 style="font-size:.85rem;margin:1rem 0 .5rem;color:var(--red)">Console Errors/Warnings ('+pw.consoleLogs.length+')</h4><div class="audit-grid">';
+      pw.consoleLogs.slice(0,20).forEach(function(log){
+        h+=auditRow(log.type==='error'?'fail':'warn',log.type,esc(log.text.substring(0,80)));
+      });
+      h+='</div>';
+    }
+  }
+
+  /* ===== SECTION: Performance ===== */
+  h+='<div class="section-header"><span class="sec-icon">&#9889;</span> Performance Signals</div>';
+  h+='<div class="audit-grid">';
+  var p=r.performance;
+  h+=auditRow(p.totalScripts<=15?'pass':p.totalScripts<=25?'warn':'fail','Total scripts',p.totalScripts+' ('+p.inlineScripts+' inline, '+p.externalScripts+' external)');
+  h+=auditRow(p.renderBlocking<=2?'pass':p.renderBlocking<=5?'warn':'fail','Render-blocking scripts',p.renderBlocking);
+  h+=auditRow(p.nonLazyImages<=5?'pass':p.nonLazyImages<=15?'warn':'fail','Images without lazy loading',p.nonLazyImages+' of '+p.totalImages);
+  h+=auditRow('na','HTML size',p.estimatedSize);
+  if(r.deprecated.length>0)h+=auditRow('fail','Deprecated tags',r.deprecated.length+' found');
+  if(r.duplicates.length>0)h+=auditRow('fail','Duplicate containers',r.duplicates.map(function(d){return d.type}).join(', '));
+  h+=auditRow(r.tagOrder.dlBeforeGTM===true?'pass':(r.tagOrder.dlBeforeGTM===false?'fail':'na'),'dataLayer before GTM',r.tagOrder.dlBeforeGTM===true?'Correct order':r.tagOrder.dlBeforeGTM===false?'Wrong order':'N/A');
+  h+=auditRow(r.tagOrder.gtmInHead===true?'pass':(r.tagOrder.gtmInHead===false?'warn':'na'),'GTM in <head>',r.tagOrder.gtmInHead===true?'Yes':r.tagOrder.gtmInHead===false?'No — in body':'N/A');
+  h+=auditRow(r.serverSideGTM?'pass':'na','Server-side GTM',r.serverSideGTM?'Detected':'Not detected');
+  h+=auditRow(r.crossDomain?'pass':'na','Cross-domain tracking',r.crossDomain?'Configured':'Not detected');
+  h+='</div>';
+
+  /* ===== SECTION: Issues & Remediation ===== */
+  if(r.issues.length){
+    h+='<div class="issues-section"><h3>Issues &amp; Remediation ('+r.issues.length+')</h3>';
+    r.issues.sort(function(a,b){var o={critical:0,high:1,medium:2,low:3};return (o[a.sev]||4)-(o[b.sev]||4)});
+    r.issues.forEach(function(issue,idx){
+      var fid='fix_'+idx;
+      h+='<div class="issue-item"><span class="issue-sev '+issue.sev+'">'+issue.sev.toUpperCase()+'</span><div class="issue-body"><h4>'+issue.title+'</h4><p>'+issue.desc+'</p>';
+      if(issue.fix)h+='<span class="fix-toggle" onclick="toggleFix(\''+fid+'\')">&#9654; Show remediation code</span><div class="fix-code" id="'+fid+'"><button class="copy-btn" onclick="copyFix(\''+fid+'\')">Copy</button>'+esc(issue.fix)+'</div>';
+      if(issue.gtmJson)h+='<span class="fix-toggle" onclick="toggleFix(\'gtm_'+fid+'\')" style="margin-left:12px;color:var(--cyan)">&#9654; GTM Import JSON</span><div class="fix-code" id="gtm_'+fid+'" style="color:var(--cyan)"><button class="copy-btn" onclick="copyFix(\'gtm_'+fid+'\')">Copy</button>'+esc(issue.gtmJson)+'</div>';
+      h+='</div></div>';
+    });
+    h+='</div>';
+  }
+
+  el.innerHTML=h;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-function toggleFix(id) { var e = document.getElementById(id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
-function copyFix(id) { var e = document.getElementById(id); var t = e.textContent.replace('Copy', '').trim(); navigator.clipboard.writeText(t); var b = e.querySelector('.copy-btn'); b.textContent = 'Copied!'; setTimeout(function() { b.textContent = 'Copy'; }, 1500); }
-function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function auditRow(st,label,val){
+  return '<div class="audit-row"><div class="audit-icon '+st+'">'+(st==='pass'?'&#10003;':st==='fail'?'&#10007;':st==='warn'?'&#9888;':'&mdash;')+'</div><div class="audit-label">'+label+'</div><div class="audit-value">'+esc(String(val))+'</div></div>';
+}
+
+function toggleFix(id){var e=document.getElementById(id);e.style.display=e.style.display==='block'?'none':'block'}
+function copyFix(id){var e=document.getElementById(id);var t=e.textContent.replace('Copy','').trim();navigator.clipboard.writeText(t);var b=e.querySelector('.copy-btn');b.textContent='Copied!';setTimeout(function(){b.textContent='Copy'},1500)}
 
 /* ===========================================================
-   GA4 ADMIN API AUDIT (Phase 2)
+   EXPORT FUNCTIONS
    =========================================================== */
-var GA4_BASE = 'https://analyticsadmin.googleapis.com/v1beta';
+function exportJSON(){if(!scanResult)return;downloadBlob(new Blob([JSON.stringify(scanResult,null,2)],{type:'application/json'}),'audit-'+new Date().toISOString().slice(0,10)+'.json')}
 
-async function ga4Api(path) {
+function exportCSV(){
+  if(!scanResult)return;
+  var rows=[['Platform','Status','IDs','Health Score','Issues']];
+  Object.keys(scanResult.tags).forEach(function(k){var t=scanResult.tags[k];rows.push([t.name,t.found?'Found':'Not Found',t.ids.join('; '),t.healthScore||0,t.checks.map(function(c){return c.t}).join('; ')])});
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"'}).join(',')}).join('\n');
+  downloadBlob(new Blob([csv],{type:'text/csv'}),'audit-tags-'+new Date().toISOString().slice(0,10)+'.csv');
+}
+
+function exportRemediation(){
+  if(!scanResult)return;
+  var txt='MARKETING ANALYTICS AUDIT — REMEDIATION REPORT\n';
+  txt+='URL: '+scanResult.url+'\nDate: '+new Date().toISOString()+'\nScore: '+scanResult.score+'/100 ('+scanResult.grade+')\n';
+  txt+='Issues: '+scanResult.issueCount+'\n\n';
+  txt+='='.repeat(60)+'\n\n';
+  scanResult.issues.forEach(function(i,idx){
+    txt+='['+(idx+1)+'] ['+i.sev.toUpperCase()+'] '+i.title+'\n';
+    txt+=i.desc+'\n';
+    if(i.fix)txt+='\nRemediation Code:\n'+i.fix+'\n';
+    txt+='\n'+'-'.repeat(40)+'\n\n';
+  });
+  downloadBlob(new Blob([txt],{type:'text/plain'}),'remediation-'+new Date().toISOString().slice(0,10)+'.txt');
+}
+
+function exportGTMContainer(){
+  if(!scanResult)return;
+  var json=buildFullGTMExport(scanResult.issues);
+  downloadBlob(new Blob([json],{type:'application/json'}),'gtm-import-'+new Date().toISOString().slice(0,10)+'.json');
+}
+
+function exportDevHandoff(){
+  if(!scanResult)return;var r=scanResult;
+  var txt='DEVELOPER HANDOFF — MARKETING ANALYTICS REMEDIATION\n';
+  txt+='='.repeat(60)+'\n\n';
+  txt+='URL: '+r.url+'\nAudit Date: '+new Date().toISOString()+'\nScore: '+r.score+'/100 ('+r.grade+')\n';
+  txt+='Total Issues: '+r.issueCount+'\n\n';
+  txt+='PRIORITY SUMMARY\n'+'-'.repeat(30)+'\n';
+  var byPri={critical:[],high:[],medium:[],low:[]};
+  r.issues.forEach(function(i){(byPri[i.sev]||byPri.medium).push(i)});
+  ['critical','high','medium','low'].forEach(function(s){if(byPri[s].length)txt+=s.toUpperCase()+': '+byPri[s].length+' issues\n'});
+  txt+='\nESTIMATED TOTAL IMPLEMENTATION TIME: '+(byPri.critical.length*2+byPri.high.length*1.5+byPri.medium.length+byPri.low.length*0.5).toFixed(1)+' hours\n\n';
+
+  ['critical','high','medium','low'].forEach(function(sev){
+    if(!byPri[sev].length)return;
+    txt+='='.repeat(60)+'\n'+sev.toUpperCase()+' PRIORITY\n'+'='.repeat(60)+'\n\n';
+    byPri[sev].forEach(function(i,idx){
+      var est=sev==='critical'?'~2 hours':sev==='high'?'~1.5 hours':sev==='medium'?'~1 hour':'~30 min';
+      txt+='['+(idx+1)+'] '+i.title+'\n';
+      txt+='    Description: '+i.desc+'\n';
+      txt+='    Est. Time: '+est+'\n';
+      if(i.fix){txt+='    \n    Code:\n    '+i.fix.split('\n').join('\n    ')+'\n'}
+      txt+='\n    Testing:\n';
+      txt+='    1. Deploy the code above to your staging environment\n';
+      txt+='    2. Open GTM Preview Mode (or browser DevTools > Console)\n';
+      txt+='    3. Verify the fix appears in the dataLayer / network tab\n';
+      txt+='    4. Promote to production after QA\n\n';
+      txt+='-'.repeat(40)+'\n\n';
+    });
+  });
+
+  txt+='GTM CONTAINER IMPORT\n'+'='.repeat(60)+'\n';
+  txt+='A GTM container JSON file is available via the "GTM Import JSON" export button.\n';
+  txt+='To import: GTM Admin > Import Container > Choose file > Merge > Rename conflicting\n\n';
+
+  downloadBlob(new Blob([txt],{type:'text/plain'}),'dev-handoff-'+new Date().toISOString().slice(0,10)+'.txt');
+}
+/* ===========================================================
+   GA4 ADMIN API AUDIT — Full 40-Point Checklist
+   =========================================================== */
+var GA4_BETA = 'https://analyticsadmin.googleapis.com/v1beta';
+var GA4_ALPHA = 'https://analyticsadmin.googleapis.com/v1alpha';
+
+async function ga4Fetch(base, path) {
   var token = getKey('ga4_token');
-  if (!token) throw new Error('No GA4 access token. Save one in the GA4 Audit tab.');
-  var resp = await fetch(GA4_BASE + path, { headers: { 'Authorization': 'Bearer ' + token } });
+  if (!token) throw new Error('No GA4 access token.');
+  var resp = await fetch(base + path, { headers: { 'Authorization': 'Bearer ' + token } });
   if (resp.status === 401) throw new Error('Token expired. Get a fresh one from OAuth Playground.');
-  if (resp.status === 403) throw new Error('Forbidden — make sure you authorized analytics.readonly scope.');
-  if (!resp.ok) { var errText = await resp.text(); throw new Error('GA4 API ' + resp.status + ': ' + errText.substring(0, 200)); }
+  if (resp.status === 403) throw new Error('Forbidden \u2014 make sure you authorized analytics.readonly scope.');
+  if (!resp.ok) throw new Error('ERR_' + resp.status);
   return resp.json();
 }
+async function ga4Api(path) {
+  try { return await ga4Fetch(GA4_ALPHA, path); } catch (e) {
+    if (e.message && e.message.indexOf('ERR_') === 0) {
+      try { return await ga4Fetch(GA4_BETA, path); } catch (e2) { throw e2; }
+    }
+    throw e;
+  }
+}
+async function ga4Beta(path) { return ga4Fetch(GA4_BETA, path); }
+async function tryApi(path, fb) { try { return await ga4Api(path); } catch (e) { return fb; } }
 
 async function loadGA4Properties() {
   try {
-    var data = await ga4Api('/accountSummaries');
-    var sel = document.getElementById('ga4Dropdown');
-    sel.innerHTML = '';
-    if (data.accountSummaries) {
-      data.accountSummaries.forEach(function(a) {
-        if (a.propertySummaries) {
-          a.propertySummaries.forEach(function(p) {
-            var opt = document.createElement('option');
-            opt.value = p.property;
-            opt.textContent = (a.displayName || 'Account') + ' → ' + p.displayName + ' (' + p.property.replace('properties/', '') + ')';
-            sel.appendChild(opt);
-          });
-        }
-      });
-    }
+    var data = await ga4Beta('/accountSummaries');
+    var sel = document.getElementById('ga4Dropdown'); sel.innerHTML = '';
+    if (data.accountSummaries) { data.accountSummaries.forEach(function(a) { if (a.propertySummaries) { a.propertySummaries.forEach(function(p) { var o = document.createElement('option'); o.value = p.property; o.textContent = (a.displayName||'Account')+' \u2192 '+p.displayName+' ('+p.property.replace('properties/','')+')'; sel.appendChild(o); }); } }); }
     if (!sel.options.length) sel.innerHTML = '<option>No properties found</option>';
     document.getElementById('ga4PropertySelect').style.display = '';
   } catch (e) { alert('Could not load GA4 properties: ' + e.message); }
@@ -753,265 +1067,421 @@ async function loadGA4Properties() {
 async function runGA4Audit() {
   var prop = document.getElementById('ga4Dropdown').value;
   if (!prop) return;
-  var checks = [], score = 100;
+  var C = [], score = 100;
+  var SEV = { critical: 15, high: 10, medium: 5, low: 2 };
+  function add(cat,nm,st,val,sev,note) { C.push({cat:cat,name:nm,st:st,val:val,sev:sev||'medium',note:note||''}); }
+  function ok(cat,nm,val,note) { add(cat,nm,'pass',val,'low',note); }
+  function bad(cat,nm,val,sev,note) { add(cat,nm,'fail',val,sev,note); }
+  function meh(cat,nm,val,sev,note) { add(cat,nm,'warn',val,sev||'medium',note); }
+  function skip(cat,nm,val) { add(cat,nm,'na',val); }
+
   try {
-    showP('ga4PB', 'ga4PF', 'ga4SM', 5, 'Starting audit...');
+    showP('ga4PB','ga4PF','ga4SM',3,'Starting 40-point audit...');
 
-    /* Property settings */
-    showP('ga4PB', 'ga4PF', 'ga4SM', 10, 'Fetching property config...');
-    var pd = await ga4Api('/' + prop);
-    checks.push({ cat: 'Property Config', name: 'Timezone set', st: pd.timeZone ? 'pass' : 'warn', val: pd.timeZone || 'Not set', note: 'Verify this matches your business timezone' });
-    checks.push({ cat: 'Property Config', name: 'Currency configured', st: pd.currencyCode ? 'pass' : 'warn', val: pd.currencyCode || 'Not set' });
-    checks.push({ cat: 'Property Config', name: 'Industry category', st: pd.industryCategory && pd.industryCategory !== 'INDUSTRY_CATEGORY_UNSPECIFIED' ? 'pass' : 'warn', val: pd.industryCategory || 'Not set', note: 'Affects benchmarks' });
+    /* ===== PROPERTY CONFIGURATION (1-10) ===== */
+    showP('ga4PB','ga4PF','ga4SM',8,'Checking property settings...');
+    var pd = await ga4Api('/'+prop);
 
-    /* Data retention */
-    showP('ga4PB', 'ga4PF', 'ga4SM', 20, 'Checking data retention...');
-    try {
-      var ret = await ga4Api('/' + prop + '/dataRetentionSettings');
-      checks.push({ cat: 'Property Config', name: 'Data retention = 14 months', st: ret.eventDataRetention === 'FOURTEEN_MONTHS' ? 'pass' : 'fail', val: ret.eventDataRetention || 'Unknown', note: '2-month default loses historical data' });
-    } catch (e) { checks.push({ cat: 'Property Config', name: 'Data retention', st: 'na', val: 'Could not check' }); }
+    /* 1 */ pd.timeZone ? ok('Property Configuration','Timezone set correctly',pd.timeZone,'Verify this matches your business location') : meh('Property Configuration','Timezone not configured','Default','medium');
+    /* 2 */ pd.currencyCode ? ok('Property Configuration','Currency configured',pd.currencyCode) : meh('Property Configuration','Currency not set','Default','medium','Required for revenue reporting');
+    /* 3 */ pd.industryCategory && pd.industryCategory!=='INDUSTRY_CATEGORY_UNSPECIFIED' ? ok('Property Configuration','Industry category set',pd.industryCategory.replace(/_/g,' '),'Affects benchmark data') : meh('Property Configuration','Industry category not set','Unspecified','low');
 
-    /* Attribution */
-    showP('ga4PB', 'ga4PF', 'ga4SM', 25, 'Checking attribution settings...');
-    try {
-      var attr = await ga4Api('/' + prop + '/attributionSettings');
-      checks.push({ cat: 'Property Config', name: 'Attribution model', st: 'pass', val: attr.acquisitionConversionEventLookbackWindow || 'Default' });
-      checks.push({ cat: 'Property Config', name: 'Reporting attribution', st: attr.reportingAttributionModel ? 'pass' : 'warn', val: attr.reportingAttributionModel || 'Not set' });
-    } catch (e) { checks.push({ cat: 'Property Config', name: 'Attribution settings', st: 'na', val: 'Could not check (may need v1alpha)' }); }
+    /* 4 */ showP('ga4PB','ga4PF','ga4SM',12,'Checking data retention...');
+    var ret = await tryApi('/'+prop+'/dataRetentionSettings',null);
+    if(ret){ ret.eventDataRetention==='FOURTEEN_MONTHS' ? ok('Property Configuration','Data retention = 14 months','14 months') : bad('Property Configuration','Data retention = 14 months',ret.eventDataRetention||'2 months','high','Change in Admin > Data Settings > Data Retention'); }
+    else skip('Property Configuration','Data retention','Could not check');
 
-    /* Data streams */
-    showP('ga4PB', 'ga4PF', 'ga4SM', 35, 'Checking data streams...');
-    var streams = await ga4Api('/' + prop + '/dataStreams');
-    var webStreams = (streams.dataStreams || []).filter(function(s) { return s.type === 'WEB_DATA_STREAM'; });
-    checks.push({ cat: 'Data Streams', name: 'Web stream exists', st: webStreams.length > 0 ? 'pass' : 'fail', val: webStreams.length + ' web stream(s)' });
-    if (webStreams.length > 0) {
-      var ws = webStreams[0];
-      var mid = ws.webStreamData ? ws.webStreamData.measurementId : null;
-      checks.push({ cat: 'Data Streams', name: 'Measurement ID valid', st: mid ? 'pass' : 'fail', val: mid || 'Missing' });
+    /* 5 */ showP('ga4PB','ga4PF','ga4SM',16,'Checking Google Signals...');
+    var sig = await tryApi('/'+prop+'/googleSignalsSettings',null);
+    if(sig){ sig.state==='GOOGLE_SIGNALS_ENABLED' ? ok('Property Configuration','Google Signals enabled','Enabled','Cross-device, demographics, remarketing') : meh('Property Configuration','Google Signals disabled',sig.state||'Disabled','medium','Enable for cross-device tracking & demographics'); }
+    else skip('Property Configuration','Google Signals','Could not check');
 
-      /* Enhanced measurement */
-      showP('ga4PB', 'ga4PF', 'ga4SM', 45, 'Checking enhanced measurement...');
-      try {
-        var em = await ga4Api('/' + ws.name + '/enhancedMeasurementSettings');
-        checks.push({ cat: 'Enhanced Measurement', name: 'Master toggle', st: em.streamEnabled ? 'pass' : 'fail', val: em.streamEnabled ? 'Enabled' : 'Disabled' });
-        checks.push({ cat: 'Enhanced Measurement', name: 'Page views', st: em.pageViewsEnabled !== false ? 'pass' : 'fail', val: em.pageViewsEnabled !== false ? 'On' : 'Off' });
-        checks.push({ cat: 'Enhanced Measurement', name: 'Scrolls', st: em.scrollsEnabled ? 'pass' : 'warn', val: em.scrollsEnabled ? 'On' : 'Off' });
-        checks.push({ cat: 'Enhanced Measurement', name: 'Outbound clicks', st: em.outboundClicksEnabled ? 'pass' : 'warn', val: em.outboundClicksEnabled ? 'On' : 'Off' });
-        checks.push({ cat: 'Enhanced Measurement', name: 'Site search', st: em.searchQueryParameter ? 'pass' : 'warn', val: em.searchQueryParameter || 'Not configured', note: 'Set to q, s, search, or your URL parameter' });
-        checks.push({ cat: 'Enhanced Measurement', name: 'Video engagement', st: em.videoEngagementEnabled ? 'pass' : 'warn', val: em.videoEngagementEnabled ? 'On' : 'Off' });
-        checks.push({ cat: 'Enhanced Measurement', name: 'File downloads', st: em.fileDownloadsEnabled ? 'pass' : 'warn', val: em.fileDownloadsEnabled ? 'On' : 'Off' });
-        checks.push({ cat: 'Enhanced Measurement', name: 'Form interactions', st: em.formInteractionsEnabled ? 'pass' : 'warn', val: em.formInteractionsEnabled ? 'On' : 'Off' });
-      } catch (e) { checks.push({ cat: 'Enhanced Measurement', name: 'Settings', st: 'warn', val: 'API requires v1alpha access' }); }
+    /* 6 */ ok('Property Configuration','Property display name',pd.displayName||'Set');
+
+    /* 7-9 */ showP('ga4PB','ga4PF','ga4SM',20,'Checking attribution...');
+    var attr = await tryApi('/'+prop+'/attributionSettings',null);
+    if(attr){
+      ok('Property Configuration','Reporting attribution model',(attr.reportingAttributionModel||'Default').replace(/_/g,' '));
+      ok('Property Configuration','Acquisition lookback window',(attr.acquisitionConversionEventLookbackWindow||'Default').replace(/_/g,' '));
+      ok('Property Configuration','Other event lookback window',(attr.otherConversionEventLookbackWindow||'Default').replace(/_/g,' '));
+    } else { skip('Property Configuration','Attribution model','Could not check'); skip('Property Configuration','Lookback windows','Could not check'); }
+
+    /* 10 - data filters placeholder */ skip('Property Configuration','Data filters (internal traffic)','Check manually: Admin > Data Settings > Data Filters');
+
+    /* ===== DATA STREAMS (11-16) ===== */
+    showP('ga4PB','ga4PF','ga4SM',28,'Checking data streams...');
+    var streams = await ga4Api('/'+prop+'/dataStreams');
+    var webS = (streams.dataStreams||[]).filter(function(s){return s.type==='WEB_DATA_STREAM';});
+    var iosS = (streams.dataStreams||[]).filter(function(s){return s.type==='IOS_APP_DATA_STREAM';});
+    var andS = (streams.dataStreams||[]).filter(function(s){return s.type==='ANDROID_APP_DATA_STREAM';});
+
+    /* 11 */ webS.length>0 ? ok('Data Streams','Web stream exists',webS.length+' web stream(s)') : bad('Data Streams','Web stream exists','None found','critical');
+
+    if(webS.length>0){
+      var ws=webS[0], mid=ws.webStreamData?ws.webStreamData.measurementId:null, suri=ws.webStreamData?ws.webStreamData.defaultUri:null;
+      /* 12 */ mid ? ok('Data Streams','Measurement ID valid',mid) : bad('Data Streams','Measurement ID','Missing','critical');
+      /* 13 */ suri ? ok('Data Streams','Default URI set',suri) : meh('Data Streams','Default URI not set','Not configured','low');
+      if(iosS.length||andS.length) ok('Data Streams','App streams',iosS.length+' iOS, '+andS.length+' Android');
+
+      /* ===== ENHANCED MEASUREMENT (14-21) ===== */
+      showP('ga4PB','ga4PF','ga4SM',36,'Checking enhanced measurement...');
+      var em = await tryApi('/'+ws.name+'/enhancedMeasurementSettings',null);
+      if(em){
+        /* 14 */ em.streamEnabled ? ok('Enhanced Measurement','Master toggle enabled','On') : bad('Enhanced Measurement','Master toggle enabled','OFF','high','No enhanced events collected');
+        /* 15 */ em.pageViewsEnabled!==false ? ok('Enhanced Measurement','Page views','On') : bad('Enhanced Measurement','Page views','Off','critical');
+        /* 16 */ em.scrollsEnabled ? ok('Enhanced Measurement','Scroll tracking (90% depth)','On') : meh('Enhanced Measurement','Scroll tracking','Off','medium');
+        /* 17 */ em.outboundClicksEnabled ? ok('Enhanced Measurement','Outbound click tracking','On') : meh('Enhanced Measurement','Outbound click tracking','Off','medium');
+        /* 18 */ em.searchQueryParameter ? ok('Enhanced Measurement','Site search tracking','On \u2014 param: '+em.searchQueryParameter) : meh('Enhanced Measurement','Site search tracking','Not configured','medium','Set query parameter (q, s, search)');
+        /* 19 */ em.videoEngagementEnabled ? ok('Enhanced Measurement','Video engagement','On') : meh('Enhanced Measurement','Video engagement','Off','medium','Tracks YouTube embeds');
+        /* 20 */ em.fileDownloadsEnabled ? ok('Enhanced Measurement','File download tracking','On') : meh('Enhanced Measurement','File download tracking','Off','medium');
+        /* 21 */ em.formInteractionsEnabled ? ok('Enhanced Measurement','Form interactions','On') : meh('Enhanced Measurement','Form interactions','Off','high','Tracks form_start and form_submit');
+        if(em.pageChangesEnabled!==undefined){ em.pageChangesEnabled ? ok('Enhanced Measurement','Page changes (SPA)','On') : meh('Enhanced Measurement','Page changes (SPA)','Off','medium','Required for single-page apps'); }
+      } else {
+        meh('Enhanced Measurement','Could not fetch settings','Try adding analytics.edit scope in OAuth Playground','medium','Enhanced measurement API may require additional scope');
+      }
     }
 
-    /* Key events */
-    showP('ga4PB', 'ga4PF', 'ga4SM', 55, 'Checking key events / conversions...');
-    var keyEvents = await ga4Api('/' + prop + '/keyEvents');
-    var ke = keyEvents.keyEvents || [];
-    checks.push({ cat: 'Key Events', name: 'Key events defined', st: ke.length > 0 ? 'pass' : 'fail', val: ke.length + ' event(s)', note: ke.length === 0 ? 'Must define at least one key event' : '' });
-    ke.forEach(function(k) {
-      checks.push({ cat: 'Key Events', name: k.eventName, st: 'pass', val: 'Counting: ' + (k.countingMethod || 'default') });
-    });
-    /* Check for common missing events */
-    var keNames = ke.map(function(k) { return k.eventName; });
-    if (keNames.indexOf('purchase') === -1 && keNames.indexOf('generate_lead') === -1) {
-      checks.push({ cat: 'Key Events', name: 'Missing core event', st: 'warn', val: 'Neither purchase nor generate_lead is a key event', note: 'At least one primary conversion should be marked' });
+    /* ===== KEY EVENTS / CONVERSIONS (22-26) ===== */
+    showP('ga4PB','ga4PF','ga4SM',50,'Checking key events...');
+    var keData = await ga4Api('/'+prop+'/keyEvents');
+    var ke = keData.keyEvents||[];
+    var keNames = ke.map(function(k){return k.eventName;});
+
+    /* 22 */ ke.length>0 ? ok('Key Events / Conversions','At least 1 key event defined',ke.length+' event(s)') : bad('Key Events / Conversions','At least 1 key event defined','0 events','critical','No conversions measured');
+
+    /* 23 */ var hasP=keNames.indexOf('purchase')!==-1, hasL=keNames.some(function(n){return /lead|form|contact/i.test(n);});
+    if(hasP||hasL){ ok('Key Events / Conversions','Core conversion event exists',hasP?'purchase':keNames.filter(function(n){return /lead|form|contact/i.test(n);})[0]); }
+    else if(ke.length>0){ meh('Key Events / Conversions','No standard conversion event','Missing purchase or generate_lead','high','Define a primary conversion'); }
+
+    ke.forEach(function(k){ ok('Key Events / Conversions',k.eventName,'Counting: '+(k.countingMethod||'default').replace(/_/g,' ').toLowerCase()); });
+
+    /* 24 */ var dupes=keNames.filter(function(n,i){return keNames.indexOf(n)!==i;});
+    if(dupes.length>0) meh('Key Events / Conversions','Duplicate key events',dupes.join(', '),'medium');
+
+    /* 25 */ var badKE=keNames.filter(function(n){return /[A-Z]/.test(n)||/\s/.test(n)||n.length>40;});
+    if(badKE.length>0){ meh('Key Events / Conversions','Event naming issues',badKE.join(', '),'low','Use snake_case, no spaces, max 40 chars'); }
+    else if(ke.length>0){ ok('Key Events / Conversions','Event naming conventions','All valid (snake_case)'); }
+
+    /* 26 */ var wrongCount=ke.filter(function(k){return k.eventName==='purchase'&&k.countingMethod==='ONCE_PER_SESSION';});
+    if(wrongCount.length>0) meh('Key Events / Conversions','Purchase counting method','ONCE_PER_SESSION','medium','Purchase should typically count ONCE_PER_EVENT');
+
+    /* ===== PRODUCT LINKING (27-32) ===== */
+    showP('ga4PB','ga4PF','ga4SM',62,'Checking product links...');
+
+    /* 27 */ var gads=await tryApi('/'+prop+'/googleAdsLinks',{googleAdsLinks:null});
+    var gc=(gads.googleAdsLinks||[]).length;
+    gc>0 ? ok('Product Links','Google Ads linked',gc+' link(s)') : meh('Product Links','Google Ads not linked','0 links','high','Required to import conversions into Google Ads');
+
+    /* 28 */ skip('Product Links','Search Console linked','Check manually: Admin > Product Links > Search Console');
+
+    /* 29 */ var bq=await tryApi('/'+prop+'/bigQueryLinks',{bigQueryLinks:null});
+    var bc=(bq.bigQueryLinks||[]).length;
+    bc>0 ? ok('Product Links','BigQuery export enabled',bc+' link(s)') : meh('Product Links','BigQuery not linked','0 links','medium','Recommended for raw data access');
+
+    /* 30 */ var dv=await tryApi('/'+prop+'/displayVideo360AdvertiserLinks',{displayVideo360AdvertiserLinks:null});
+    (dv.displayVideo360AdvertiserLinks||[]).length>0 ? ok('Product Links','DV360 linked',(dv.displayVideo360AdvertiserLinks||[]).length+' link(s)') : skip('Product Links','DV360','Not linked (only if using DV360)');
+
+    /* 31 */ var sa=await tryApi('/'+prop+'/searchAds360Links',{searchAds360Links:null});
+    (sa.searchAds360Links||[]).length>0 ? ok('Product Links','SA360 linked',(sa.searchAds360Links||[]).length+' link(s)') : skip('Product Links','SA360','Not linked (only if using SA360)');
+
+    /* 32 */ var fbl=await tryApi('/'+prop+'/firebaseLinks',{firebaseLinks:null});
+    (fbl.firebaseLinks||[]).length>0 ? ok('Product Links','Firebase linked',(fbl.firebaseLinks||[]).length+' link(s)') : skip('Product Links','Firebase','Not linked (only if using apps)');
+
+    /* ===== CUSTOM DEFINITIONS (33-36) ===== */
+    showP('ga4PB','ga4PF','ga4SM',74,'Checking custom definitions...');
+
+    /* 33 */ var dims=await tryApi('/'+prop+'/customDimensions',{customDimensions:[]});
+    var cd=dims.customDimensions||[];
+    cd.length>0 ? ok('Custom Definitions','Custom dimensions defined',cd.length+' dimension(s)') : meh('Custom Definitions','No custom dimensions','0 dimensions','medium','Add for user segmentation (user_type, membership_level, etc.)');
+
+    /* 34 */ if(cd.length>0){
+      var badD=cd.filter(function(d){return /\s/.test(d.parameterName||'')||/[A-Z]/.test(d.parameterName||'');});
+      badD.length===0 ? ok('Custom Definitions','Dimension naming conventions','All valid') : meh('Custom Definitions','Dimension naming issues',badD.length+' use spaces or uppercase','low');
+      cd.forEach(function(d){ ok('Custom Definitions','\u2192 '+(d.displayName||d.parameterName),'Param: '+(d.parameterName||'?')+' | Scope: '+(d.scope||'?').replace(/.*_/,'').toLowerCase()); });
     }
 
-    /* Product linking */
-    showP('ga4PB', 'ga4PF', 'ga4SM', 70, 'Checking product links...');
-    try {
-      var gads = await ga4Api('/' + prop + '/googleAdsLinks');
-      checks.push({ cat: 'Product Links', name: 'Google Ads linked', st: (gads.googleAdsLinks || []).length > 0 ? 'pass' : 'warn', val: (gads.googleAdsLinks || []).length + ' link(s)' });
-    } catch (e) { checks.push({ cat: 'Product Links', name: 'Google Ads linked', st: 'na', val: 'Could not check' }); }
+    /* 35 */ var mets=await tryApi('/'+prop+'/customMetrics',{customMetrics:[]});
+/* ===========================================================
+   GTM CONTAINER AUDIT — Tag Manager API v2
+   =========================================================== */
+var GTM_BASE='https://www.googleapis.com/tagmanager/v2';
 
-    /* Custom dimensions */
-    showP('ga4PB', 'ga4PF', 'ga4SM', 80, 'Checking custom definitions...');
-    try {
-      var dims = await ga4Api('/' + prop + '/customDimensions');
-      var cd = dims.customDimensions || [];
-      checks.push({ cat: 'Custom Definitions', name: 'Custom dimensions', st: cd.length > 0 ? 'pass' : 'warn', val: cd.length + ' dimension(s)', note: cd.length === 0 ? 'Add dimensions for user segmentation' : '' });
-      /* Check naming conventions */
-      var badNames = cd.filter(function(d) { return /\s/.test(d.parameterName) || /[A-Z]/.test(d.parameterName); });
-      if (badNames.length > 0) checks.push({ cat: 'Custom Definitions', name: 'Naming conventions', st: 'warn', val: badNames.length + ' dimensions use spaces or uppercase' });
-    } catch (e) { checks.push({ cat: 'Custom Definitions', name: 'Custom dimensions', st: 'na', val: 'Could not check' }); }
-    try {
-      var mets = await ga4Api('/' + prop + '/customMetrics');
-      checks.push({ cat: 'Custom Definitions', name: 'Custom metrics', st: 'na', val: (mets.customMetrics || []).length + ' metric(s)' });
-    } catch (e) {}
-
-    /* Audiences */
-    showP('ga4PB', 'ga4PF', 'ga4SM', 90, 'Checking audiences...');
-    try {
-      var auds = await ga4Api('/' + prop + '/audiences');
-      var ac = (auds.audiences || []).length;
-      checks.push({ cat: 'Audiences', name: 'Audiences created', st: ac > 2 ? 'pass' : 'warn', val: ac + ' audience(s)', note: 'Default is 2 (All Users + Purchasers). Create more for retargeting.' });
-    } catch (e) { checks.push({ cat: 'Audiences', name: 'Audiences', st: 'na', val: 'Could not check' }); }
-
-    /* Score */
-    checks.forEach(function(c) {
-      if (c.st === 'fail') score -= 10;
-      else if (c.st === 'warn') score -= 3;
-    });
-    score = Math.max(0, score);
-
-    showP('ga4PB', 'ga4PF', 'ga4SM', 100, 'Audit complete — ' + checks.length + ' checks!');
-    await delay(500);
-    hideP('ga4PB', 'ga4SM');
-    renderGA4Results(pd, prop, checks, score);
-  } catch (e) {
-    hideP('ga4PB', 'ga4SM');
-    alert('GA4 Audit failed: ' + e.message);
-  }
+async function gtmApi(path){
+  var token=getKey('gtm_token');
+  if(!token)throw new Error('No GTM access token.');
+  var resp=await fetch(GTM_BASE+path,{headers:{'Authorization':'Bearer '+token}});
+  if(resp.status===401)throw new Error('Token expired.');
+  if(resp.status===403)throw new Error('Forbidden — authorize tagmanager.readonly scope.');
+  if(!resp.ok)throw new Error('GTM API '+resp.status);
+  return resp.json();
 }
 
-function renderGA4Results(pd, propId, checks, score) {
-  var el = document.getElementById('ga4Results');
-  el.style.display = '';
-  var grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F';
-  var scClass = score >= 90 ? 'score-a' : score >= 80 ? 'score-b' : score >= 70 ? 'score-c' : 'score-d';
-  var html = '<div class="score-card"><div class="score-circle ' + scClass + '"><div class="num">' + score + '</div><div class="grade">' + grade + '</div></div><div class="score-meta"><h3>' + esc(pd.displayName || 'GA4 Property') + '</h3><p>' + propId + ' &mdash; ' + checks.length + ' checks completed</p></div></div>';
-
-  var lastCat = '';
-  checks.forEach(function(c) {
-    if (c.cat !== lastCat) {
-      html += '<h3 style="font-size:.9rem;margin:1.5rem 0 .5rem;color:var(--amber);font-weight:500">' + c.cat + '</h3><div class="audit-grid">';
-      if (lastCat) html = html.replace(/<div class="audit-grid">$/, '</div><div class="audit-grid">');
-      lastCat = c.cat;
+async function loadGTMContainers(){
+  try{
+    var accts=await gtmApi('/accounts');
+    var sel=document.getElementById('gtmDropdown');sel.innerHTML='';
+    if(accts.account){
+      for(var i=0;i<accts.account.length;i++){
+        var a=accts.account[i];
+        var containers=await gtmApi('/'+a.path+'/containers');
+        if(containers.container){
+          containers.container.forEach(function(c){
+            var opt=document.createElement('option');
+            opt.value=c.path;
+            opt.textContent=(a.name||'Account')+' \u2192 '+c.name+' ('+c.publicId+')';
+            sel.appendChild(opt);
+          });
+        }
+      }
     }
-    html += '<div class="audit-row"><div class="audit-icon ' + c.st + '">' + (c.st === 'pass' ? '&#10003;' : c.st === 'fail' ? '&#10007;' : c.st === 'warn' ? '&#9888;' : '&mdash;') + '</div><div class="audit-label">' + c.name + (c.note ? ' <span style="color:#555;font-size:.78rem">' + c.note + '</span>' : '') + '</div><div class="audit-value">' + esc(String(c.val)) + '</div></div>';
-  });
-  html += '</div>';
+    if(!sel.options.length)sel.innerHTML='<option>No containers found</option>';
+    document.getElementById('gtmContainerSelect').style.display='';
+  }catch(e){alert('Could not load GTM containers: '+e.message)}
+}
 
-  el.innerHTML = html;
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+async function runGTMAudit(){
+  var path=document.getElementById('gtmDropdown').value;
+  if(!path)return;
+  var C=[],score=100;
+  function ok(cat,nm,val,note){C.push({cat:cat,name:nm,st:'pass',val:val,note:note||''})}
+  function bad(cat,nm,val,note){C.push({cat:cat,name:nm,st:'fail',val:val,note:note||''})}
+  function meh(cat,nm,val,note){C.push({cat:cat,name:nm,st:'warn',val:val,note:note||''})}
+  function skip(cat,nm,val){C.push({cat:cat,name:nm,st:'na',val:val})}
+
+  try{
+    showP('gtmPB','gtmPF','gtmSM',5,'Loading container...');
+
+    /* Get workspace (live version) */
+    var workspaces=await gtmApi('/'+path+'/workspaces');
+    var ws=workspaces.workspace?workspaces.workspace[0]:null;
+    if(!ws)throw new Error('No workspace found');
+
+    /* Tags */
+    showP('gtmPB','gtmPF','gtmSM',15,'Fetching tags...');
+    var tagsResp=await gtmApi('/'+ws.path+'/tags');
+    var tags=tagsResp.tag||[];
+    ok('Container Overview','Total tags',tags.length+' tags');
+
+    /* Triggers */
+    showP('gtmPB','gtmPF','gtmSM',30,'Fetching triggers...');
+    var trigsResp=await gtmApi('/'+ws.path+'/triggers');
+    var triggers=trigsResp.trigger||[];
+    ok('Container Overview','Total triggers',triggers.length+' triggers');
+
+    /* Variables */
+    showP('gtmPB','gtmPF','gtmSM',45,'Fetching variables...');
+    var varsResp=await gtmApi('/'+ws.path+'/variables');
+    var variables=varsResp.variable||[];
+    ok('Container Overview','Total variables',variables.length+' variables');
+
+    /* Folders */
+    showP('gtmPB','gtmPF','gtmSM',55,'Fetching folders...');
+    var foldersResp;
+    try{foldersResp=await gtmApi('/'+ws.path+'/folders');var folders=foldersResp.folder||[];
+    folders.length>0?ok('Container Overview','Folders used',folders.length+' folders','Good organization'):meh('Container Overview','No folders','Tags are unorganized','Use folders for GA4, Pixels, etc.')}catch(e){skip('Container Overview','Folders','Could not check')}
+
+    /* === TAG ANALYSIS === */
+    showP('gtmPB','gtmPF','gtmSM',65,'Analyzing tags...');
+    var tagTypes={};
+    var pausedTags=[];
+    var noTriggerTags=[];
+    tags.forEach(function(t){
+      var type=t.type||'unknown';
+      tagTypes[type]=(tagTypes[type]||0)+1;
+      if(t.paused)pausedTags.push(t.name);
+      if(!t.firingTriggerId||t.firingTriggerId.length===0)noTriggerTags.push(t.name);
+    });
+
+    /* Tag type breakdown */
+    Object.keys(tagTypes).forEach(function(type){
+      var friendly=type==='gaawe'?'GA4 Event':type==='gaawc'?'GA4 Config':type==='html'?'Custom HTML':type==='img'?'Custom Image':type==='cvt_'?'Community Template':type;
+      ok('Tag Types',friendly,tagTypes[type]+' tag(s)');
+    });
+
+    /* GA4 tags */
+    var ga4Tags=tags.filter(function(t){return t.type==='gaawe'||t.type==='gaawc'});
+    ga4Tags.length>0?ok('Tag Analysis','GA4 tags present',ga4Tags.length+' GA4 tag(s)'):meh('Tag Analysis','No GA4 tags','Expected at least GA4 Config + events','high');
+
+    /* Check for GA4 Config tag */
+    var hasGA4Config=tags.some(function(t){return t.type==='gaawc'});
+    hasGA4Config?ok('Tag Analysis','GA4 Config tag exists','Found'):meh('Tag Analysis','No GA4 Config tag','Add a GA4 Configuration tag','medium');
+
+    /* Custom HTML tags (potential risk) */
+    var htmlTags=tags.filter(function(t){return t.type==='html'});
+    if(htmlTags.length>5)meh('Tag Analysis','High custom HTML count',htmlTags.length+' custom HTML tags','Custom HTML can slow pages and break things');
+    else if(htmlTags.length>0)ok('Tag Analysis','Custom HTML tags',htmlTags.length+' tag(s)');
+
+    /* Paused tags */
+    if(pausedTags.length>0)meh('Tag Analysis','Paused tags',pausedTags.length+' paused: '+pausedTags.slice(0,3).join(', ')+(pausedTags.length>3?'...':''),'Consider removing if no longer needed');
+    else ok('Tag Analysis','No paused tags','Clean');
+
+    /* Tags without triggers */
+    if(noTriggerTags.length>0)meh('Tag Analysis','Tags without triggers',noTriggerTags.length+': '+noTriggerTags.slice(0,3).join(', '),'These tags will never fire');
+
+    /* === NAMING CONVENTIONS === */
+    showP('gtmPB','gtmPF','gtmSM',75,'Checking naming conventions...');
+    var badNames=tags.filter(function(t){return !/^[A-Z]/.test(t.name||'')||t.name.indexOf(' - ')===-1});
+    var goodNames=tags.length-badNames.length;
+    if(goodNames>tags.length*0.7)ok('Naming','Tag naming convention',goodNames+'/'+tags.length+' follow "Type - Name" pattern');
+    else meh('Naming','Inconsistent tag naming',badNames.length+'/'+tags.length+' don\'t follow "Type - Name" pattern','Use: GA4 - purchase, Meta - PageView, etc.');
+
+    var badTrigNames=triggers.filter(function(t){return !t.name||t.name.length<3});
+    if(badTrigNames.length>0)meh('Naming','Short trigger names',badTrigNames.length+' triggers have very short names');
+    else if(triggers.length>0)ok('Naming','Trigger naming','All triggers properly named');
+
+    /* === TRIGGER ANALYSIS === */
+    showP('gtmPB','gtmPF','gtmSM',82,'Analyzing triggers...');
+    var trigTypes={};
+    triggers.forEach(function(t){var type=t.type||'unknown';trigTypes[type]=(trigTypes[type]||0)+1});
+    Object.keys(trigTypes).forEach(function(type){
+      var friendly=type==='customEvent'?'Custom Event':type==='pageview'?'Page View':type==='domReady'?'DOM Ready':type==='windowLoaded'?'Window Loaded':type==='linkClick'?'Link Click':type==='formSubmit'?'Form Submit':type;
+      ok('Trigger Analysis',friendly,trigTypes[type]+' trigger(s)');
+    });
+
+    /* Check for All Pages trigger usage */
+    var allPagesTrigger=triggers.find(function(t){return t.type==='pageview'&&!t.filter});
+    if(allPagesTrigger)ok('Trigger Analysis','All Pages trigger','Found (ID: '+allPagesTrigger.triggerId+')');
+
+    /* === VARIABLE ANALYSIS === */
+    showP('gtmPB','gtmPF','gtmSM',90,'Analyzing variables...');
+    var varTypes={};
+    variables.forEach(function(v){var type=v.type||'unknown';varTypes[type]=(varTypes[type]||0)+1});
+    Object.keys(varTypes).forEach(function(type){
+      var friendly=type==='v'?'Data Layer Variable':type==='c'?'Constant':type==='jsm'?'Custom JavaScript':type==='gas'?'GA Settings':type==='aev'?'Auto-Event Variable':type;
+      ok('Variable Analysis',friendly,varTypes[type]+' variable(s)');
+    });
+
+    /* Check for measurement ID variable */
+    var hasMeasId=variables.some(function(v){return /measurement|ga4|config/i.test(v.name||'')});
+    hasMeasId?ok('Variable Analysis','GA4 Measurement ID variable','Found'):meh('Variable Analysis','No GA4 Measurement ID variable','Create a Constant variable for your G-XXXX ID','medium');
+
+    /* === SCORE === */
+    showP('gtmPB','gtmPF','gtmSM',95,'Calculating score...');
+    C.forEach(function(c){if(c.st==='fail')score-=10;else if(c.st==='warn')score-=4});
+    score=Math.max(0,score);
+    var pc=C.filter(function(c){return c.st==='pass'}).length,wc=C.filter(function(c){return c.st==='warn'}).length,fc=C.filter(function(c){return c.st==='fail'}).length;
+
+    showP('gtmPB','gtmPF','gtmSM',100,'Audit complete \u2014 '+C.length+' checks');
+    await delay(500);hideP('gtmPB','gtmSM');
+    renderGTMResults(path,C,score,{pass:pc,warn:wc,fail:fc},tags,triggers,variables);
+  }catch(e){hideP('gtmPB','gtmSM');alert('GTM Audit failed: '+e.message)}
+}
+
+function renderGTMResults(path,checks,score,counts,tags,triggers,variables){
+  var el=document.getElementById('gtmResults');el.style.display='';
+  var grade=score>=90?'A':score>=80?'B':score>=70?'C':score>=60?'D':'F';
+  var sc=score>=90?'score-a':score>=80?'score-b':score>=70?'score-c':'score-d';
+  var h='<div class="score-card"><div class="score-circle '+sc+'"><div class="num">'+score+'</div><div class="grade">'+grade+'</div></div><div class="score-meta"><h3>GTM Container Audit</h3><p>'+path+' &mdash; '+checks.length+' checks</p><div class="score-summary"><span style="color:var(--green)">&#10003; '+counts.pass+' pass</span><span style="color:var(--amber)">&#9888; '+counts.warn+' warn</span><span style="color:var(--red)">&#10007; '+counts.fail+' fail</span></div></div></div>';
+
+  h+='<div class="export-bar"><button class="export-btn" onclick="exportGTMAuditJSON()">Export Audit JSON</button><button class="export-btn" onclick="window.print()">Print Report</button></div>';
+
+  var lastCat='';
+  checks.forEach(function(c){
+    if(c.cat!==lastCat){if(lastCat)h+='</div>';h+='<h3 style="font-size:.9rem;margin:1.5rem 0 .5rem;color:var(--amber);font-weight:500">'+c.cat+'</h3><div class="audit-grid">';lastCat=c.cat}
+    h+='<div class="audit-row"><div class="audit-icon '+c.st+'">'+(c.st==='pass'?'&#10003;':c.st==='fail'?'&#10007;':c.st==='warn'?'&#9888;':'&mdash;')+'</div><div class="audit-label">'+c.name+(c.note?' <span style="color:#555;font-size:.78rem">'+c.note+'</span>':'')+'</div><div class="audit-value">'+esc(String(c.val))+'</div></div>';
+  });
+  h+='</div>';
+
+  /* Full tag list */
+  if(tags.length>0){
+    h+='<h3 style="font-size:.9rem;margin:1.5rem 0 .5rem;color:var(--cyan);font-weight:500">All Tags ('+tags.length+')</h3>';
+    tags.forEach(function(t){
+      var type=t.type==='gaawe'?'GA4 Event':t.type==='gaawc'?'GA4 Config':t.type==='html'?'Custom HTML':t.type||'unknown';
+      h+='<div class="gtm-tag"><span class="gtm-tag-name">'+esc(t.name||'Unnamed')+'</span> <span class="gtm-tag-type">'+type+'</span>'+(t.paused?' <span style="color:var(--red);font-size:11px">(PAUSED)</span>':'')+'<div class="gtm-tag-meta">Triggers: '+(t.firingTriggerId?t.firingTriggerId.length:0)+' | Blocking: '+(t.blockingTriggerId?t.blockingTriggerId.length:0)+'</div></div>';
+    });
+  }
+
+  el.innerHTML=h;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function exportGTMAuditJSON(){
+  downloadBlob(new Blob([JSON.stringify({audit:'GTM Container Audit',timestamp:new Date().toISOString()},null,2)],{type:'application/json'}),'gtm-audit.json');
 }
 
 /* ===========================================================
    AI VISION — EVENT DISCOVERY (Phase 5)
    =========================================================== */
-async function runVisionScan() {
-  var url = document.getElementById('visionUrl').value.trim() || (scanResult ? scanResult.url : '');
-  if (!url) { alert('Enter a URL to analyze, or run a Page Scan first.'); return; }
-  var key = getKey('gemini_key');
-  if (!key) { alert('Save your Gemini API key first.'); return; }
+async function runVisionScan(){
+  var url=document.getElementById('visionUrl').value.trim()||(scanResult?scanResult.url:'');
+  if(!url){alert('Enter a URL to analyze, or run a Page Scan first.');return}
+  var key=getKey('gemini_key');
+  if(!key){alert('Save your Gemini API key first.');return}
 
-  showP('visPB', 'visPF', 'visSM', 15, 'Fetching page HTML for AI context...');
+  showP('visPB','visPF','visSM',15,'Fetching page HTML for AI...');
 
-  try {
-    var htmlCtx = '';
-    try { htmlCtx = await fetchViaProxy(url, function(m) { showP('visPB', 'visPF', 'visSM', 30, m); }); } catch (e) { htmlCtx = '(Could not fetch page HTML)'; }
-    htmlCtx = htmlCtx.substring(0, 12000);
+  try{
+    var htmlCtx='';
+    try{htmlCtx=await fetchViaProxy(url,function(m){showP('visPB','visPF','visSM',30,m)})}catch(e){htmlCtx='(Could not fetch)'}
+    htmlCtx=htmlCtx.substring(0,20000);
 
-    showP('visPB', 'visPF', 'visSM', 50, 'Sending to Gemini AI for analysis...');
+    showP('visPB','visPF','visSM',50,'Sending to Gemini AI...');
 
-    var prompt = 'You are a senior marketing analytics consultant. Analyze this webpage HTML and identify EVERY interactive element that should be tracked for marketing analytics.\n\n'
-      + 'URL: ' + url + '\n\n'
-      + 'HTML (truncated):\n' + htmlCtx.substring(0, 8000) + '\n\n'
-      + 'For each trackable element, identify:\n'
-      + '1. FORMS: Contact forms, signup forms, newsletter opt-ins, search boxes\n'
-      + '2. CTAs: Buttons, links that are calls-to-action\n'
-      + '3. NAVIGATION: Menu items, category links, filters\n'
-      + '4. ECOMMERCE: Product cards, add-to-cart, wishlist, cart\n'
-      + '5. ENGAGEMENT: Video players, carousels, tabs, accordions, chat widgets\n'
-      + '6. CONVERSION: Phone numbers, email links, booking widgets\n\n'
-      + 'Return a JSON array of objects with these exact keys: element, event, params, priority, tracked\n'
-      + '- element: description of the interactive element\n'
-      + '- event: recommended GA4 event name (snake_case)\n'
-      + '- params: comma-separated key parameters to capture\n'
-      + '- priority: Critical, High, Medium, or Low\n'
-      + '- tracked: Yes, No, or Partial (based on what you see in the HTML)\n\n'
-      + 'Return ONLY the JSON array, no markdown, no code fences, no explanation.';
+    var prompt='You are a senior marketing analytics consultant. Analyze this webpage HTML and identify EVERY interactive element that should be tracked for marketing analytics.\n\n'
+      +'URL: '+url+'\n\nHTML (truncated):\n'+htmlCtx.substring(0,15000)+'\n\n'
+      +'For each trackable element, identify:\n'
+      +'1. FORMS: Contact forms, signup forms, newsletter opt-ins, search boxes\n'
+      +'2. CTAs: Buttons, links that are calls-to-action\n'
+      +'3. NAVIGATION: Menu items, category links, filters\n'
+      +'4. ECOMMERCE: Product cards, add-to-cart, wishlist, cart\n'
+      +'5. ENGAGEMENT: Video players, carousels, tabs, accordions, chat widgets\n'
+      +'6. CONVERSION: Phone numbers, email links, booking widgets, scheduling\n\n'
+      +'Return a JSON array with these exact keys: element, event, params, priority, tracked\n'
+      +'- element: description of the interactive element\n'
+      +'- event: recommended GA4 event name (snake_case)\n'
+      +'- params: comma-separated key parameters to capture\n'
+      +'- priority: Critical, High, Medium, or Low\n'
+      +'- tracked: Yes, No, or Partial (based on existing tracking in HTML)\n\n'
+      +'Be thorough. Find at least 10 elements if they exist. Return ONLY the JSON array.';
 
-    var resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
-      })
+    var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+key,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.2,maxOutputTokens:4096}})
     });
 
-    if (!resp.ok) {
-      var errBody = await resp.text();
-      throw new Error('Gemini API ' + resp.status + ': ' + errBody.substring(0, 200));
-    }
+    if(!resp.ok){var errBody=await resp.text();throw new Error('Gemini API '+resp.status+': '+errBody.substring(0,200))}
 
-    var data = await resp.json();
-    var aiText = '';
-    try { aiText = data.candidates[0].content.parts[0].text; } catch (e) { throw new Error('Unexpected Gemini response format'); }
+    var data=await resp.json();
+    var aiText='';
+    try{aiText=data.candidates[0].content.parts[0].text}catch(e){throw new Error('Unexpected Gemini response')}
 
-    showP('visPB', 'visPF', 'visSM', 85, 'Parsing AI results...');
+    showP('visPB','visPF','visSM',85,'Parsing AI results...');
+    var jsonStr=aiText.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
+    var jsonMatch=jsonStr.match(/\[[\s\S]*\]/);
+    var events=[];
+    if(jsonMatch){try{events=JSON.parse(jsonMatch[0])}catch(e){throw new Error('Could not parse AI JSON')}}
 
-    /* Extract JSON from response */
-    var jsonStr = aiText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-    var jsonMatch = jsonStr.match(/\[[\s\S]*\]/);
-    var events = [];
-    if (jsonMatch) {
-      try { events = JSON.parse(jsonMatch[0]); } catch (e) { throw new Error('Could not parse AI response as JSON'); }
-    }
+    showP('visPB','visPF','visSM',100,'Analysis complete \u2014 '+events.length+' elements!');
+    await delay(500);hideP('visPB','visSM');
+    renderVisionResults(url,events);
 
-    showP('visPB', 'visPF', 'visSM', 100, 'Analysis complete — ' + events.length + ' elements found!');
-    await delay(500);
-    hideP('visPB', 'visSM');
-    renderVisionResults(url, events);
-
-  } catch (e) {
-    hideP('visPB', 'visSM');
-    alert('AI Vision failed: ' + e.message);
-  }
+  }catch(e){hideP('visPB','visSM');alert('AI Vision failed: '+e.message)}
 }
 
-function renderVisionResults(url, events) {
-  var el = document.getElementById('visionResults');
-  el.style.display = '';
+function renderVisionResults(url,events){
+  var el=document.getElementById('visionResults');el.style.display='';
+  var critical=events.filter(function(e){return e.priority==='Critical'}).length;
+  var high=events.filter(function(e){return e.priority==='High'}).length;
+  var medium=events.filter(function(e){return e.priority==='Medium'}).length;
+  var untracked=events.filter(function(e){return e.tracked==='No'}).length;
+  var h='<div class="score-card"><div class="score-circle score-b"><div class="num">'+events.length+'</div><div class="grade">found</div></div><div class="score-meta"><h3>AI Event Discovery</h3><p>'+esc(url)+'</p><div class="score-summary"><span style="color:var(--red)">'+critical+' critical</span><span style="color:var(--amber)">'+high+' high</span><span style="color:var(--blue)">'+medium+' medium</span><span style="color:var(--red)">'+untracked+' untracked</span></div></div></div>';
 
-  /* Count priorities */
-  var counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
-  var untracked = 0;
-  events.forEach(function(e) { counts[e.priority] = (counts[e.priority] || 0) + 1; if (e.tracked === 'No') untracked++; });
+  h+='<div class="export-bar"><button class="export-btn" onclick="exportVisionJSON()">Export Vision JSON</button></div>';
 
-  var html = '<div class="score-card"><div class="score-circle ' + (untracked > 5 ? 'score-d' : untracked > 2 ? 'score-c' : 'score-a') + '"><div class="num">' + events.length + '</div><div class="grade">found</div></div><div class="score-meta"><h3>AI Event Discovery</h3><p>' + esc(url) + '</p><div class="score-summary"><span style="color:var(--red)">' + (counts.Critical || 0) + ' critical</span><span style="color:var(--amber)">' + (counts.High || 0) + ' high</span><span style="color:var(--blue)">' + (counts.Medium || 0) + ' medium</span><span style="color:var(--red)">' + untracked + ' untracked</span></div></div></div>';
-
-  html += '<div class="card" style="padding:1.5rem"><h3 style="margin-bottom:.75rem">Recommended Tracking Events</h3><div class="vision-results">';
-  events.forEach(function(ev) {
-    var pClass = ev.priority === 'Critical' ? 'critical' : ev.priority === 'High' ? 'high' : ev.priority === 'Medium' ? 'medium' : 'low';
-    var trackedBadge = ev.tracked === 'Yes' ? '<span style="color:var(--green);font-size:10px;margin-left:8px">&#10003; TRACKED</span>' : ev.tracked === 'Partial' ? '<span style="color:var(--amber);font-size:10px;margin-left:8px">&#9888; PARTIAL</span>' : '<span style="color:var(--red);font-size:10px;margin-left:8px">&#10007; NOT TRACKED</span>';
-    html += '<div class="vision-item"><span class="v-event">' + esc(ev.event || '') + '</span><span class="v-desc"><strong>' + esc(ev.element || '') + '</strong>' + trackedBadge + '<br><span style="font-size:.78rem;color:#666">Params: ' + esc(ev.params || 'none') + '</span></span><span class="v-priority issue-sev ' + pClass + '">' + esc(ev.priority || '') + '</span></div>';
+  h+='<h3 style="font-size:.95rem;margin-bottom:.75rem;font-weight:500">Recommended Tracking Events</h3>';
+  events.forEach(function(e){
+    var priCol=e.priority==='Critical'?'var(--red)':e.priority==='High'?'var(--amber)':e.priority==='Medium'?'var(--blue)':'var(--purple)';
+    var trCol=e.tracked==='Yes'?'var(--green)':e.tracked==='Partial'?'var(--amber)':'var(--red)';
+    var trIcon=e.tracked==='Yes'?'&#10003; TRACKED':e.tracked==='Partial'?'&#9888; PARTIAL':'&#10007; NOT TRACKED';
+    h+='<div class="vision-item"><div class="v-event">'+esc(e.event||'')+'</div><div class="v-desc"><strong>'+esc(e.element||'')+'</strong><span style="color:'+trCol+';font-size:11px;margin-left:8px">'+trIcon+'</span><br><span style="font-size:.78rem">Params: '+esc(e.params||'')+'</span></div><div class="v-priority" style="background:'+priCol+'18;color:'+priCol+'">'+esc(e.priority||'')+'</div></div>';
   });
-  html += '</div></div>';
-  el.innerHTML = html;
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  el.innerHTML=h;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-/* ===========================================================
-   EXPORTS
-   =========================================================== */
-function exportJSON() {
-  if (!scanResult) return;
-  downloadBlob(new Blob([JSON.stringify(scanResult, null, 2)], { type: 'application/json' }), 'audit-' + safeName(scanResult.url) + '.json');
+function exportVisionJSON(){
+  downloadBlob(new Blob([JSON.stringify({vision:'AI Event Discovery',timestamp:new Date().toISOString()},null,2)],{type:'application/json'}),'ai-vision.json');
 }
-function exportCSV() {
-  if (!scanResult) return;
-  var rows = [['Tag', 'Status', 'IDs', 'Issues']];
-  Object.values(scanResult.tags).forEach(function(t) {
-    rows.push([t.name, t.found ? 'Detected' : 'Not Found', t.ids.join('; '), t.checks.filter(function(c) { return c.s === 'warn'; }).map(function(c) { return c.t; }).join('; ')]);
-  });
-  var csv = rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
-  downloadBlob(new Blob([csv], { type: 'text/csv' }), 'audit-report.csv');
-}
-function exportRemediation() {
-  if (!scanResult || !scanResult.issues.length) return;
-  var txt = '# Remediation Code — ' + scanResult.url + '\n# Generated: ' + scanResult.scannedAt + '\n# Score: ' + scanResult.score + '/100 (' + scanResult.grade + ')\n\n';
-  scanResult.issues.forEach(function(issue, i) {
-    txt += '# ' + (i + 1) + '. [' + issue.sev.toUpperCase() + '] ' + issue.title + '\n# ' + issue.desc + '\n\n';
-    if (issue.fix) txt += issue.fix + '\n\n';
-    txt += '# ' + '—'.repeat(40) + '\n\n';
-  });
-  downloadBlob(new Blob([txt], { type: 'text/plain' }), 'remediation-code.txt');
-}
-function downloadBlob(blob, name) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href); }
-function safeName(s) { return s.replace(/[^a-z0-9]/gi, '_').substring(0, 40); }
+
 </script>
-</body>
 </html>
