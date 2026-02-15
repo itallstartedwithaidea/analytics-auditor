@@ -2,6 +2,34 @@
 
 All notable changes to the Marketing Analytics Auditor will be documented in this file.
 
+## [2.0.0] — 2026-02-15
+
+### Added
+
+- **GA4 Property Audit (Phase 2)** — Full 40-point checklist via GA4 Admin API
+  - Google OAuth token via OAuth Playground (read-only `analytics.readonly` scope)
+  - Property dropdown to select from all accessible GA4 properties
+  - Checks: timezone, currency, industry, data retention, attribution, data streams, enhanced measurement (all 8 toggles), key events, Google Ads linking, custom dimensions, naming conventions, audiences
+  - Separate GA4 health score with A–F grading
+- **AI Page Vision (Phase 5)** — Gemini 2.0 Flash event discovery
+  - Free Gemini API key integration via Google AI Studio
+  - AI identifies trackable elements: forms, CTAs, ecommerce, navigation, engagement, conversion
+  - Returns GA4 event name, parameters, priority, and tracked status for each element
+  - Score card showing total elements, priority breakdown, and untracked count
+- **4-Tab Interface** — Page Scanner, GA4 Audit, AI Vision, Settings
+- **Settings Tab** — View/clear all session keys, session status dashboard, "Clear All" option
+- **Multi-proxy fallback** — Now tries 4 CORS proxies (allorigins, corsproxy.io, codetabs, corsproxy.org) with 12-second timeouts instead of just one
+- **Expanded remediation code** — New fix templates for `view_item`, `begin_checkout`, `dataLayer` initialization before GTM
+- **Session persistence** — All API keys stored in `sessionStorage`, restored on page load within same tab
+- **Enhanced error handling** — GA4 API errors show specific messages (401 expired, 403 forbidden, etc.)
+
+### Changed
+
+- App.html rebuilt from 720 lines to 1,017 lines
+- Proxy fetch now has multiple fallbacks instead of single proxy
+- Landing page Phase 2 label updated to "Live Now"
+- Documentation completely rewritten with accurate OAuth Playground instructions, AI Vision docs, and session storage reference
+
 ## [1.0.0] — 2026-02-14
 
 ### Added
@@ -31,34 +59,4 @@ All notable changes to the Marketing Analytics Auditor will be documented in thi
 
 ---
 
-## Planned
-
-### [1.1.0] — Phase 2: GA4 Property Audit
-- Google OAuth integration with `analytics.readonly` scope
-- 40-point GA4 Admin API checklist
-- Property configuration, data streams, enhanced measurement, key events, product linking, custom definitions, audiences
-- Separate GA4 property health score
-
-### [1.2.0] — Phase 3: Pixel & CAPI Audit
-- Meta Marketing API integration for Event Match Quality
-- Cross-platform CAPI validation
-- Deduplication parameter checking
-- Server-side vs. client-side event coverage comparison
-
-### [1.3.0] — Phase 4: Full Remediation Engine
-- GTM container JSON export (importable)
-- Developer handoff document generator
-- CAPI endpoint boilerplate in Python and PHP
-- Platform-specific remediation for all detected platforms
-
-### [1.4.0] — Phase 5: AI Page Vision
-- Gemini Vision / Claude Vision integration
-- Full-page screenshot analysis
-- Interactive element identification and event suggestion
-- Gap mapping against existing tracking
-
-### [1.5.0] — Phase 6: Multi-Site Portfolio
-- Portfolio management for agencies
-- Standardized tracking schema definition
-- Cross-site coverage comparison
-- Deviation flagging and unified remediation
+*All core phases (1–5) are now live. Ongoing improvements include additional platform validation, expanded remediation templates, and community contributions.*

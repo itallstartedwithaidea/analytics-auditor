@@ -69,7 +69,7 @@ Detects 10 marketing platforms by analyzing DOM script tags, JavaScript global o
 
 Plus: Google Consent Mode v2, IAB TCF 2.0, and cookie consent banner detection.
 
-### Phase 2: GA4 Property Audit 🔧 In Development
+### Phase 2: GA4 Property Audit ✅ Live
 
 40-point checklist via Google Analytics Admin API:
 
@@ -81,27 +81,28 @@ Plus: Google Consent Mode v2, IAB TCF 2.0, and cookie consent banner detection.
 - **Custom Definitions (4 checks):** Dimensions, metrics, naming, orphan detection
 - **Audiences & Access (4 checks):** Audiences, triggers, user access, data sharing
 
-### Phase 3: Pixel & CAPI Audit 🔧 Planned
+### Phase 3: Pixel & CAPI Detection ✅ Live (via Page Scanner)
 
-Cross-platform pixel validation and server-side event quality checking.
+Cross-platform pixel detection and CAPI indicator checking integrated into the Page Scanner.
 
-### Phase 4: Remediation Engine ✅ Live (Phase 1 scope)
+### Phase 4: Remediation Engine ✅ Live
 
 For every issue found, generates:
-- `dataLayer.push()` code with correct event parameters
-- GTM container JSON ready to import
-- CAPI endpoint boilerplate (Node.js)
-- Google Consent Mode v2 implementation
-- Enhanced Conversions setup code
-- Full pixel installation snippets
+- `dataLayer.push()` code for ecommerce events (purchase, add_to_cart, view_item, begin_checkout) and lead events (generate_lead)
+- Meta CAPI boilerplate (Node.js with Python guidance)
+- Google Consent Mode v2 implementation template
+- Enhanced Conversions setup code with all user_data fields
+- Full pixel installation snippets (LinkedIn Insight, etc.)
+- GTM noscript fallback code
+- dataLayer initialization code
 
-### Phase 5: AI Page Vision 🔧 Planned
+### Phase 5: AI Page Vision ✅ Live
 
-Gemini/Claude vision analyzes page screenshots to suggest tracking events.
-
-### Phase 6: Multi-Site Portfolio 🔧 Planned
-
-Standardize tracking across multiple sites/brands with portfolio-level schemas.
+Gemini 2.0 Flash analyzes webpage HTML to identify every trackable interactive element:
+- Forms, CTAs, navigation, ecommerce elements, engagement widgets, conversion elements
+- Maps each to a recommended GA4 event name with parameters
+- Shows priority (Critical/High/Medium/Low) and tracked status (Yes/Partial/No)
+- Requires a free Gemini API key from Google AI Studio
 
 ---
 
@@ -136,7 +137,7 @@ Standardize tracking across multiple sites/brands with portfolio-level schemas.
 ```
 analytics-auditor/
 ├── index.html          Landing page with animated demo
-├── app.html            The auditor application (Phase 1)
+├── app.html            The auditor application (all features)
 ├── docs.html           Full documentation with sidebar nav
 ├── README.md           This file
 ├── ARCHITECTURE.md     Technical architecture & build plan
@@ -173,11 +174,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. The easiest ways to contr
 ## Roadmap
 
 - [x] Phase 1: Page scanner + tag detection + remediation code
-- [ ] Phase 2: GA4 Admin API property audit (40-point checklist)
-- [ ] Phase 3: Pixel & CAPI validation via platform APIs
-- [ ] Phase 4: Full remediation engine (GTM JSON exports, CAPI boilerplate)
-- [ ] Phase 5: AI page vision (Gemini/Claude screenshot analysis)
-- [ ] Phase 6: Multi-site portfolio management
+- [x] Phase 2: GA4 Admin API property audit (40-point checklist)
+- [x] Phase 3: Pixel & CAPI detection (integrated into page scanner)
+- [x] Phase 4: Remediation engine (dataLayer, CAPI, Enhanced Conversions, Consent Mode)
+- [x] Phase 5: AI page vision (Gemini 2.0 Flash event discovery)
 
 ---
 

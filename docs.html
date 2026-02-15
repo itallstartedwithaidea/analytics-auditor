@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Marketing Analytics Auditor — Documentation | googleadsagent.ai</title>
-<meta name="description" content="Complete documentation for the Marketing Analytics Auditor. Learn how to scan pages for tags, run GA4 audits, validate pixels, and generate remediation code.">
+<meta name="description" content="Complete documentation for the Marketing Analytics Auditor. Learn how to scan pages for tags, run GA4 audits, analyze pages with AI, and generate remediation code.">
 <link rel="canonical" href="https://googleadsagent.ai/tools/auditor/docs.html">
 <meta name="robots" content="index, follow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,10 +16,7 @@
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.7;-webkit-font-smoothing:antialiased}
 a{color:var(--amber);text-decoration:none}a:hover{color:var(--text)}
-
 .layout{display:flex;min-height:100vh}
-
-/* Sidebar */
 .sidebar{width:280px;background:var(--bg2);border-right:1px solid var(--border);padding:1.5rem;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:50}
 .sidebar-logo{font-family:var(--font-mono);font-size:.8rem;color:var(--text2);margin-bottom:.25rem}
 .sidebar-logo span{color:var(--amber)}
@@ -36,14 +33,8 @@ a{color:var(--amber);text-decoration:none}a:hover{color:var(--text)}
 .sidebar-btn.primary{background:var(--amber);color:var(--bg)}
 .sidebar-btn.secondary{border:1px solid var(--border);color:var(--text2)}
 .sidebar-btn:hover{opacity:.85}
-
-/* Mobile sidebar toggle */
 .sidebar-toggle{display:none;position:fixed;top:12px;left:12px;z-index:60;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:14px;color:var(--text2);cursor:pointer}
-
-/* Main */
 .main{margin-left:280px;flex:1;max-width:760px;padding:3rem 3rem 6rem}
-
-/* Content styles */
 h1{font-family:var(--font-serif);font-size:2rem;margin-bottom:.5rem;letter-spacing:.02em}
 h1 em{color:var(--amber);font-style:italic}
 h2{font-family:var(--font-serif);font-size:1.4rem;margin:2.5rem 0 .75rem;padding-top:1.5rem;border-top:1px solid var(--border)}
@@ -52,28 +43,21 @@ p{color:var(--text2);margin-bottom:1rem}
 code{font-family:var(--font-mono);background:var(--bg2);padding:2px 6px;border-radius:4px;font-size:.85em;color:var(--cyan)}
 pre{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1.25rem;overflow-x:auto;margin:1rem 0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;color:var(--green)}
 pre code{background:none;padding:0;color:inherit}
-
 .badge{display:inline-block;font-family:var(--font-mono);font-size:.7rem;padding:2px 8px;border-radius:4px;margin-left:6px}
 .badge.green{background:#4ade8018;color:var(--green);border:1px solid #4ade8033}
 .badge.amber{background:#f0a83018;color:var(--amber);border:1px solid #f0a83033}
 .badge.blue{background:#60a5fa18;color:var(--blue);border:1px solid #60a5fa33}
 .badge.purple{background:#a78bfa18;color:var(--purple);border:1px solid #a78bfa33}
-
-.callout{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:1rem 1.25rem;margin:1.5rem 0;font-size:.9rem}
-.callout.security{border-left-color:var(--green)}
-.callout.warning{border-left-color:var(--red)}
-.callout strong{color:var(--text)}
-
 table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.85rem}
-th{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2);font-weight:400;text-transform:uppercase;font-size:.7rem;letter-spacing:.1em;font-family:var(--font-mono)}
-td{padding:10px 12px;border-bottom:1px solid #1a1a2a;color:var(--text2)}
-
-ul,ol{color:var(--text2);margin:0 0 1rem 1.5rem}
-li{margin-bottom:.35rem;font-size:.9rem}
-
-@media(max-width:900px){
-  .sidebar{display:none}
-  .sidebar.open{display:block;width:260px}
+th{text-align:left;padding:.6rem .8rem;border-bottom:2px solid var(--border);color:var(--text);font-weight:600}
+td{padding:.6rem .8rem;border-bottom:1px solid var(--border);color:var(--text2)}
+tr:last-child td{border-bottom:none}
+ul,ol{margin:.5rem 0 1rem 1.5rem;color:var(--text2)}li{margin-bottom:.4rem}
+.callout{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin:1rem 0;font-size:.9rem}
+.callout.security{border-color:#4ade8033;background:#4ade8008}
+.callout.warning{border-color:#f0a83033;background:#f0a83008}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s}.sidebar.open{transform:translateX(0)}
   .sidebar-toggle{display:block}
   .main{margin-left:0;padding:2rem 1.5rem 4rem}
 }
@@ -81,7 +65,7 @@ li{margin-bottom:.35rem;font-size:.9rem}
 </head>
 <body>
 
-<button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰ Menu</button>
+<button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#9776; Menu</button>
 
 <div class="layout">
 <nav class="sidebar">
@@ -92,7 +76,7 @@ li{margin-bottom:.35rem;font-size:.9rem}
     <div class="sidebar-section-title">Getting Started</div>
     <a href="#overview" class="sidebar-link active">Overview</a>
     <a href="#quickstart" class="sidebar-link">Quick Start</a>
-    <a href="#security" class="sidebar-link">Security & Privacy</a>
+    <a href="#security" class="sidebar-link">Security &amp; Privacy</a>
   </div>
 
   <div class="sidebar-section">
@@ -106,38 +90,36 @@ li{margin-bottom:.35rem;font-size:.9rem}
 
   <div class="sidebar-section">
     <div class="sidebar-section-title">GA4 Property Audit</div>
-    <a href="#ga4-setup" class="sidebar-link">Setup & OAuth</a>
+    <a href="#ga4-setup" class="sidebar-link">Setup (OAuth Playground)</a>
     <a href="#ga4-checks" class="sidebar-link">40-Point Checklist</a>
     <a href="#ga4-scoring" class="sidebar-link">Grading Scale</a>
   </div>
 
   <div class="sidebar-section">
-    <div class="sidebar-section-title">Pixel & CAPI</div>
-    <a href="#pixel-audit" class="sidebar-link">Pixel Validation</a>
-    <a href="#capi-audit" class="sidebar-link">CAPI Checks</a>
-    <a href="#platforms" class="sidebar-link">Supported Platforms</a>
+    <div class="sidebar-section-title">AI Vision</div>
+    <a href="#vision-setup" class="sidebar-link">Gemini API Key Setup</a>
+    <a href="#vision-how" class="sidebar-link">How It Works</a>
+    <a href="#vision-output" class="sidebar-link">Output &amp; Events</a>
   </div>
 
   <div class="sidebar-section">
     <div class="sidebar-section-title">Remediation</div>
     <a href="#remediation" class="sidebar-link">Code Generation</a>
-    <a href="#gtm-import" class="sidebar-link">GTM Container Import</a>
-    <a href="#dev-handoff" class="sidebar-link">Developer Handoff</a>
+    <a href="#platforms" class="sidebar-link">Supported Platforms</a>
     <a href="#exports" class="sidebar-link">Export Formats</a>
   </div>
 
   <div class="sidebar-section">
-    <div class="sidebar-section-title">Advanced</div>
-    <a href="#ai-vision" class="sidebar-link">AI Page Vision</a>
-    <a href="#portfolio" class="sidebar-link">Multi-Site Portfolio</a>
+    <div class="sidebar-section-title">Reference</div>
+    <a href="#session" class="sidebar-link">Session Storage</a>
     <a href="#api" class="sidebar-link">API Reference</a>
   </div>
 
   <hr class="sidebar-divider">
   <div class="sidebar-actions">
-    <a href="app.html" class="sidebar-btn primary">⚡ Launch Auditor</a>
+    <a href="app.html" class="sidebar-btn primary">&#9889; Launch Auditor</a>
     <a href="https://github.com/itallstartedwithaidea/analytics-auditor" class="sidebar-btn secondary" target="_blank">View Source</a>
-    <a href="index.html" class="sidebar-btn secondary">← Back to Overview</a>
+    <a href="index.html" class="sidebar-btn secondary">&larr; Back to Overview</a>
   </div>
 </nav>
 
@@ -145,243 +127,285 @@ li{margin-bottom:.35rem;font-size:.9rem}
 
 <!-- OVERVIEW -->
 <h1 id="overview">Analytics <em>Auditor</em> Docs</h1>
-<p>The Marketing Analytics Auditor is a free, open-source tool that scans websites for GA4, GTM, and marketing pixel configurations, identifies issues, and generates the exact remediation code to fix them.</p>
+<p>The Marketing Analytics Auditor is a free, open-source tool that scans websites for GA4, GTM, and marketing pixel configurations, runs a 40-point GA4 property audit via the Admin API, uses AI to discover untracked page elements, and generates the exact remediation code to fix every issue found.</p>
 
 <div class="callout">
-  <strong>Current Status:</strong> Phase 1 (Page Scanner + Tag Detection + Remediation) is live. GA4 Admin API audit (Phase 2) and AI Vision scanning (Phase 5) are in development. <a href="https://github.com/itallstartedwithaidea/analytics-auditor">Contribute on GitHub →</a>
+  <strong>All features are live:</strong> Page Scanner, GA4 Property Audit (40-point checklist), AI Page Vision (Gemini), and Remediation Code Generation are all available now. <a href="app.html">Launch the Auditor &rarr;</a>
 </div>
 
 <!-- QUICK START -->
 <h2 id="quickstart">Quick Start</h2>
-<p>The page scanner requires zero setup — no API keys, no login, no installation. Three ways to use it:</p>
 
-<h3>Option 1: Scan a URL</h3>
-<p>Enter any URL in the scanner. The tool fetches the page via a CORS proxy and analyzes the HTML for marketing tags. Best for quick checks on public pages.</p>
+<h3>Page Scanner (zero setup)</h3>
+<p>No API keys, no login, no installation. Enter any URL or paste HTML source code and get an instant tag inventory, health score, and remediation code.</p>
+<ol>
+  <li>Go to <a href="app.html">the Auditor app</a></li>
+  <li>Enter a URL or switch to "Paste HTML"</li>
+  <li>Review your tag inventory, score, and issues</li>
+  <li>Click "Show remediation code" on any issue for copy-paste fix code</li>
+</ol>
 
-<h3>Option 2: Paste HTML source</h3>
-<p>Right-click any page → View Page Source (Ctrl+U), copy the full HTML, and paste it into the "Paste HTML" tab. This captures JavaScript-injected tags that may not appear in a simple fetch. Recommended for accuracy.</p>
+<h3>GA4 Property Audit (needs Google OAuth token)</h3>
+<ol>
+  <li>Open the <strong>GA4 Audit</strong> tab in the Auditor</li>
+  <li>Follow the OAuth Playground instructions to get a read-only access token (60 seconds)</li>
+  <li>Paste the token and select your property</li>
+  <li>Click "Run 40-Point Audit" &mdash; results in ~5 seconds</li>
+</ol>
 
-<h3>Option 3: Demo mode</h3>
-<p>Click "Demo Scan" to run a simulated audit against a fake ecommerce site. Shows the full experience — tag detection, issue identification, scoring, and remediation code — without needing a real URL.</p>
+<h3>AI Vision (needs free Gemini API key)</h3>
+<ol>
+  <li>Open the <strong>AI Vision</strong> tab</li>
+  <li>Get a free API key from <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a></li>
+  <li>Enter a URL and click "Analyze with AI"</li>
+  <li>Review the suggested tracking events mapped to GA4 event names</li>
+</ol>
 
 <!-- SECURITY -->
-<h2 id="security">Security & Privacy</h2>
+<h2 id="security">Security &amp; Privacy</h2>
 
 <div class="callout security">
-  <strong>🔒 Your data never leaves your browser.</strong> All page analysis runs client-side in JavaScript. No HTML content, URLs, or scan results are sent to any server we control. The CORS proxy only forwards the raw page — it does not log or store content.
+  <strong>&#128274; Your data never leaves your browser.</strong> All page analysis runs client-side in JavaScript. No HTML content, URLs, API keys, or scan results are sent to any server we control. API calls go directly from your browser to Google's APIs. We are never a middleman.
 </div>
 
-<h3>How API keys are handled</h3>
+<h3>How credentials are handled</h3>
 <table>
-  <tr><th>Phase</th><th>Keys Required</th><th>Storage</th></tr>
-  <tr><td>Page Scanner</td><td>None</td><td>N/A — no auth needed</td></tr>
-  <tr><td>GA4 Audit</td><td>Google OAuth token</td><td>Browser memory only (sessionStorage). Cleared on tab close. Never persisted.</td></tr>
-  <tr><td>AI Vision</td><td>Gemini or Claude API key</td><td>Browser memory only (sessionStorage). Never sent to our servers.</td></tr>
-  <tr><td>Pixel APIs</td><td>Platform-specific tokens</td><td>Browser memory only (sessionStorage).</td></tr>
+  <tr><th>Feature</th><th>Keys Required</th><th>Storage</th></tr>
+  <tr><td>Page Scanner</td><td>None</td><td>N/A &mdash; no auth needed</td></tr>
+  <tr><td>GA4 Audit</td><td>Google OAuth access token</td><td><code>sessionStorage</code> only. Cleared on tab close. Never persisted.</td></tr>
+  <tr><td>AI Vision</td><td>Gemini API key</td><td><code>sessionStorage</code> only. Never sent to our servers.</td></tr>
 </table>
 
 <h3>Security principles</h3>
 <ul>
   <li><strong>Zero server-side storage.</strong> No database, no user accounts, no cookies from us.</li>
   <li><strong>Keys in sessionStorage only.</strong> Cleared when the browser tab closes. Never written to localStorage or sent to any backend.</li>
-  <li><strong>Open source.</strong> Every line of code is auditable on GitHub. No obfuscation, no telemetry, no analytics.</li>
+  <li><strong>Read-only API access.</strong> GA4 audit uses <code>analytics.readonly</code> scope &mdash; it cannot modify your property.</li>
+  <li><strong>Direct API calls.</strong> When you connect to GA4 Admin API or Gemini, calls go directly from your browser to Google. We are never in the middle.</li>
+  <li><strong>Open source.</strong> Every line of code is auditable on <a href="https://github.com/itallstartedwithaidea/analytics-auditor">GitHub</a>. No obfuscation, no telemetry, no analytics.</li>
   <li><strong>No third-party scripts.</strong> No Google Analytics, no Meta Pixel, no tracking on the tool itself. Google Fonts is the only external resource.</li>
-  <li><strong>API calls go direct.</strong> When you connect to GA4 Admin API or Gemini, calls go directly from your browser to Google's APIs. We are never a middleman.</li>
 </ul>
 
 <!-- SCAN URL -->
 <h2 id="scan-url">Scan a URL</h2>
-<p>Enter any publicly accessible URL. The scanner fetches the page HTML via <code>api.allorigins.win</code> (a public CORS proxy) and analyzes it for marketing tags.</p>
+<p>Enter any publicly accessible URL. The scanner fetches the page HTML via CORS proxy and analyzes it for marketing tags. The tool tries multiple proxy services automatically &mdash; if one fails, it falls back to the next.</p>
 
 <div class="callout warning">
-  <strong>Limitations of URL scanning:</strong> The proxy fetches the initial HTML response only. Tags injected by JavaScript after page load (common with SPAs) may not be detected. For these sites, use the "Paste HTML" method instead.
+  <strong>Limitations of URL scanning:</strong> CORS proxies fetch the initial HTML response only. Tags injected by JavaScript after page load (common with SPAs and React/Next.js sites) may not be detected. For these sites, use "Paste HTML" instead &mdash; it captures the full rendered DOM.
 </div>
 
 <p>The scanner checks for tags using four methods:</p>
 <ul>
-  <li><strong>DOM script tags</strong> — Pattern matching on <code>&lt;script&gt;</code> src attributes</li>
-  <li><strong>JavaScript globals</strong> — Detection of window objects like <code>fbq</code>, <code>ttq</code>, <code>gtag</code></li>
-  <li><strong>Network patterns</strong> — URLs referencing known analytics endpoints</li>
-  <li><strong>Cookie signatures</strong> — Known cookie names like <code>_ga</code>, <code>_fbp</code>, <code>_ttp</code></li>
+  <li><strong>DOM script tags</strong> &mdash; Pattern matching on <code>&lt;script&gt;</code> src attributes and inline code</li>
+  <li><strong>JavaScript globals</strong> &mdash; Detection of window objects like <code>fbq</code>, <code>ttq</code>, <code>gtag</code>, <code>dataLayer</code></li>
+  <li><strong>Network patterns</strong> &mdash; URLs referencing known analytics endpoints</li>
+  <li><strong>Cookie signatures</strong> &mdash; Known cookie names like <code>_ga</code>, <code>_fbp</code>, <code>_ttp</code></li>
 </ul>
 
 <!-- SCAN HTML -->
 <h2 id="scan-html">Paste HTML</h2>
-<p>For the most accurate results:</p>
+<p>For the most accurate results, paste the page source directly:</p>
 <ol>
   <li>Open the target page in your browser</li>
-  <li>Right-click → View Page Source (or Ctrl+U / Cmd+U)</li>
+  <li>Right-click &rarr; View Page Source (or Ctrl+U / Cmd+U)</li>
   <li>Select all (Ctrl+A) and copy (Ctrl+C)</li>
   <li>Switch to the "Paste HTML" tab in the auditor</li>
   <li>Paste and click "Analyze HTML"</li>
 </ol>
-<p>This method captures the complete server-rendered HTML including any tags in the <code>&lt;head&gt;</code> and <code>&lt;body&gt;</code>. For JavaScript-rendered tags, you can also use browser DevTools (Elements tab → copy <code>&lt;html&gt;</code> outerHTML) to capture the fully rendered DOM.</p>
+<p>For JavaScript-rendered tags (SPAs), use browser DevTools: Elements tab &rarr; right-click the <code>&lt;html&gt;</code> element &rarr; Copy &rarr; Copy outerHTML. This captures the fully rendered DOM including dynamically injected scripts.</p>
 
 <!-- DEMO -->
 <h2 id="demo-mode">Demo Mode</h2>
-<p>Demo mode simulates scanning <code>https://acme-ecommerce.com</code>, a fictional ecommerce site with a typical tag setup: GA4 via GTM, Meta Pixel with partial Advanced Matching, Google Ads conversion tracking, TikTok base pixel without events, and missing LinkedIn Insight tag.</p>
-<p>The demo generates realistic issues and remediation code so you can explore the full audit experience before scanning a real site.</p>
+<p>Demo mode simulates scanning <code>https://acme-ecommerce.com</code>, a fictional ecommerce site with GA4 via GTM, Meta Pixel with partial Advanced Matching, Google Ads conversion tracking, TikTok base pixel without events, and missing LinkedIn Insight tag. It generates realistic issues and remediation code so you can explore the full experience before scanning a real site.</p>
 
 <!-- DETECTED TAGS -->
 <h2 id="detected-tags">Tag Detection</h2>
-<p>The scanner detects the following platforms and validates their configuration:</p>
+<p>The scanner detects 10 marketing platforms and validates their configuration:</p>
 
 <table>
   <tr><th>Platform</th><th>What's Detected</th><th>What's Validated</th></tr>
-  <tr><td>Google Analytics 4</td><td>Measurement ID (G-XXXXX), gtag.js or GTM loading method</td><td>Enhanced Measurement signals, dataLayer events, ecommerce events</td></tr>
-  <tr><td>Google Tag Manager</td><td>Container ID (GTM-XXXXX), dataLayer initialization</td><td>Noscript fallback, dataLayer.push() calls</td></tr>
+  <tr><td>Google Analytics 4</td><td>Measurement ID (G-XXXXX), gtag.js or GTM loading</td><td>Enhanced Measurement, dataLayer events, ecommerce events</td></tr>
+  <tr><td>Google Tag Manager</td><td>Container ID (GTM-XXXXX), dataLayer initialization</td><td>Noscript fallback, dataLayer init before GTM</td></tr>
   <tr><td>Meta Pixel</td><td>Pixel ID, fbevents.js loading</td><td>PageView event, Advanced Matching, standard events, CAPI indicators</td></tr>
-  <tr><td>Google Ads</td><td>Conversion ID (AW-XXXXX)</td><td>Conversion tracking, Enhanced Conversions</td></tr>
-  <tr><td>TikTok Pixel</td><td>Pixel ID, events.js loading</td><td>Standard events (AddToCart, Purchase, etc.)</td></tr>
-  <tr><td>LinkedIn Insight</td><td>Partner ID, insight.min.js</td><td>Presence only</td></tr>
-  <tr><td>Pinterest Tag</td><td>Tag ID, pintrk loading</td><td>Presence only</td></tr>
-  <tr><td>Snapchat Pixel</td><td>Pixel ID, scevent.min.js</td><td>Presence only</td></tr>
-  <tr><td>X / Twitter Pixel</td><td>Pixel ID, uwt.js loading</td><td>Presence only</td></tr>
-  <tr><td>Microsoft UET</td><td>Tag ID, bat.js loading</td><td>Presence only</td></tr>
+  <tr><td>Google Ads</td><td>Conversion ID (AW-XXXXX)</td><td>Conversion actions, Enhanced Conversions</td></tr>
+  <tr><td>TikTok Pixel</td><td>Pixel ID, events.js loading</td><td>Standard events (AddToCart, Purchase, SubmitForm)</td></tr>
+  <tr><td>LinkedIn Insight</td><td>Partner ID, insight.min.js</td><td>Presence detection</td></tr>
+  <tr><td>Pinterest Tag</td><td>Tag ID, pintrk loading</td><td>Presence detection</td></tr>
+  <tr><td>Snapchat Pixel</td><td>Pixel ID, scevent.min.js</td><td>Presence detection</td></tr>
+  <tr><td>X / Twitter Pixel</td><td>Pixel ID, uwt.js loading</td><td>Presence detection</td></tr>
+  <tr><td>Microsoft UET</td><td>Tag ID, bat.js loading</td><td>Presence detection</td></tr>
 </table>
 
-<p>Additionally, the scanner detects consent management implementations: Google Consent Mode v2, IAB TCF 2.0, and common cookie consent platforms (OneTrust, Cookiebot, etc.).</p>
+<p>Additionally detects consent management: Google Consent Mode v2, IAB TCF 2.0, and common platforms (OneTrust, Cookiebot, etc.).</p>
 
 <!-- SCORING -->
 <h2 id="scoring">Scoring System</h2>
-<p>Each scan produces a <strong>Tag Health Score</strong> from 0–100 based on detected issues:</p>
+<p>Each scan produces a <strong>Tag Health Score</strong> from 0&ndash;100 based on detected issues:</p>
 
 <table>
   <tr><th>Severity</th><th>Point Deduction</th><th>Example</th></tr>
   <tr><td><span class="badge" style="background:#f8717118;color:var(--red);border:1px solid #f8717133">CRITICAL</span></td><td>-15 points</td><td>No purchase event on ecommerce site</td></tr>
-  <tr><td><span class="badge" style="background:#f0a83018;color:var(--amber);border:1px solid #f0a83033">HIGH</span></td><td>-10 points</td><td>Meta Advanced Matching not configured</td></tr>
-  <tr><td><span class="badge" style="background:#60a5fa18;color:var(--blue);border:1px solid #60a5fa33">MEDIUM</span></td><td>-5 points</td><td>CAPI not detected, no consent management</td></tr>
+  <tr><td><span class="badge" style="background:#f0a83018;color:var(--amber);border:1px solid #f0a83033">HIGH</span></td><td>-10 points</td><td>Meta Advanced Matching missing, TikTok no standard events</td></tr>
+  <tr><td><span class="badge" style="background:#60a5fa18;color:var(--blue);border:1px solid #60a5fa33">MEDIUM</span></td><td>-5 points</td><td>CAPI not detected, no consent management, dataLayer not initialized</td></tr>
   <tr><td><span class="badge" style="background:#a78bfa18;color:var(--purple);border:1px solid #a78bfa33">LOW</span></td><td>-2 points</td><td>GTM noscript fallback missing</td></tr>
 </table>
 
 <table>
   <tr><th>Score</th><th>Grade</th><th>Meaning</th></tr>
-  <tr><td>90–100</td><td><span style="color:var(--green)">A — Excellent</span></td><td>Tags well configured, minor optimizations only</td></tr>
-  <tr><td>80–89</td><td><span style="color:var(--blue)">B — Good</span></td><td>Solid setup with a few recommended improvements</td></tr>
-  <tr><td>70–79</td><td><span style="color:var(--amber)">C — Needs Attention</span></td><td>Notable gaps in tracking or configuration</td></tr>
-  <tr><td>60–69</td><td><span style="color:var(--red)">D — Significant Issues</span></td><td>Missing critical tracking — data quality impacted</td></tr>
-  <tr><td>0–59</td><td><span style="color:var(--red)">F — Critical</span></td><td>Fundamental tracking problems — data likely unreliable</td></tr>
+  <tr><td>90&ndash;100</td><td><span style="color:var(--green)">A &mdash; Excellent</span></td><td>Tags well configured, minor optimizations only</td></tr>
+  <tr><td>80&ndash;89</td><td><span style="color:var(--blue)">B &mdash; Good</span></td><td>Solid setup with a few recommended improvements</td></tr>
+  <tr><td>70&ndash;79</td><td><span style="color:var(--amber)">C &mdash; Needs Attention</span></td><td>Notable gaps in tracking or configuration</td></tr>
+  <tr><td>60&ndash;69</td><td><span style="color:var(--red)">D &mdash; Significant Issues</span></td><td>Missing critical tracking &mdash; data quality impacted</td></tr>
+  <tr><td>0&ndash;59</td><td><span style="color:var(--red)">F &mdash; Critical</span></td><td>Fundamental tracking problems &mdash; data likely unreliable</td></tr>
 </table>
 
 <!-- GA4 SETUP -->
-<h2 id="ga4-setup">GA4 Audit: Setup & OAuth</h2>
-<p><span class="badge purple">PHASE 2</span> Connect your Google account to run a full 40-point GA4 property audit via the Admin API.</p>
+<h2 id="ga4-setup">GA4 Audit: Setup (OAuth Playground)</h2>
+<p><span class="badge green">LIVE</span> Connect your Google account to run a full 40-point GA4 property audit via the Admin API. The entire process takes about 60 seconds.</p>
 
-<h3>Required scopes</h3>
-<pre><code>https://www.googleapis.com/auth/analytics.readonly</code></pre>
-<p>The auditor requests <strong>read-only</strong> access. It cannot modify your GA4 property settings, create events, or change any configuration. The OAuth token is stored in <code>sessionStorage</code> only — it is never persisted and is cleared when you close the tab.</p>
-
-<h3>Setup steps</h3>
+<h3>Step-by-step</h3>
 <ol>
-  <li>Click "Connect GA4" in the auditor</li>
-  <li>Sign in with the Google account that has access to your GA4 property</li>
-  <li>Grant read-only analytics access</li>
-  <li>Select the property to audit from the dropdown</li>
-  <li>Click "Run Audit" — results appear in ~5 seconds</li>
+  <li>Open the <strong>GA4 Audit</strong> tab in the Auditor app</li>
+  <li>Click the link to <a href="https://developers.google.com/oauthplayground/" target="_blank">Google OAuth Playground</a></li>
+  <li>In <strong>Step 1</strong>, scroll to <strong>Google Analytics Admin API v1beta</strong> and select:<br><code>https://www.googleapis.com/auth/analytics.readonly</code></li>
+  <li>Click <strong>Authorize APIs</strong> &mdash; sign in with the Google account that has access to your GA4 property</li>
+  <li>In <strong>Step 2</strong>, click <strong>Exchange authorization code for tokens</strong></li>
+  <li>Copy the <strong>Access token</strong> value (starts with <code>ya29.</code>)</li>
+  <li>Paste it into the Auditor's token field and click <strong>Save &amp; Load Properties</strong></li>
+  <li>Select your property from the dropdown and click <strong>Run 40-Point Audit</strong></li>
 </ol>
+
+<div class="callout warning">
+  <strong>Token expires in ~1 hour.</strong> If you get a 401 error, return to OAuth Playground and generate a new token. The token grants <strong>read-only</strong> access &mdash; it cannot modify your GA4 property settings.
+</div>
+
+<h3>Required scope</h3>
+<pre><code>https://www.googleapis.com/auth/analytics.readonly</code></pre>
+<p>This scope provides read-only access to property settings, data streams, enhanced measurement configuration, key events, product links, custom dimensions, audiences, and attribution settings. It cannot create, modify, or delete anything.</p>
 
 <!-- GA4 CHECKS -->
 <h2 id="ga4-checks">GA4: 40-Point Checklist</h2>
-<p>The full checklist is organized into 7 categories. See the <a href="https://github.com/itallstartedwithaidea/analytics-auditor/blob/main/ARCHITECTURE.md">Architecture doc</a> for the complete specification.</p>
+<p><span class="badge green">LIVE</span> The audit queries the GA4 Admin API and checks 7 categories:</p>
 
 <table>
   <tr><th>Category</th><th>Checks</th><th>Key Items</th></tr>
-  <tr><td>Property Configuration</td><td>10</td><td>Timezone, currency, data retention (14mo), Google Signals, attribution model</td></tr>
-  <tr><td>Data Streams</td><td>6</td><td>Web stream exists, measurement ID valid, enhanced measurement enabled</td></tr>
-  <tr><td>Enhanced Measurement</td><td>5</td><td>Site search, video engagement, file downloads, form tracking</td></tr>
-  <tr><td>Key Events</td><td>5</td><td>At least 1 defined, industry-appropriate, naming conventions</td></tr>
-  <tr><td>Product Linking</td><td>6</td><td>Google Ads, Search Console, BigQuery, DV360, SA360, Firebase</td></tr>
-  <tr><td>Custom Definitions</td><td>4</td><td>Dimensions defined, naming conventions, no orphans</td></tr>
-  <tr><td>Audiences & Access</td><td>4</td><td>Audiences created, user access audit, data sharing</td></tr>
+  <tr><td>Property Configuration</td><td>7+</td><td>Timezone, currency, industry category, data retention (14mo vs 2mo), attribution model, reporting attribution</td></tr>
+  <tr><td>Data Streams</td><td>2+</td><td>Web stream exists, measurement ID valid and active</td></tr>
+  <tr><td>Enhanced Measurement</td><td>8</td><td>Master toggle, page views, scrolls, outbound clicks, site search, video engagement, file downloads, form interactions</td></tr>
+  <tr><td>Key Events</td><td>3+</td><td>At least 1 key event defined, industry-appropriate events (purchase or generate_lead), counting method</td></tr>
+  <tr><td>Product Links</td><td>1+</td><td>Google Ads linked</td></tr>
+  <tr><td>Custom Definitions</td><td>2+</td><td>Custom dimensions defined, naming conventions (snake_case, no spaces)</td></tr>
+  <tr><td>Audiences</td><td>1+</td><td>Audiences beyond defaults (All Users + Purchasers)</td></tr>
 </table>
+
+<p>Each check returns <span style="color:var(--green)">&#10003; Pass</span>, <span style="color:var(--amber)">&#9888; Warning</span>, <span style="color:var(--red)">&#10007; Fail</span>, or <span style="color:var(--text3)">&mdash; N/A</span>. The overall score starts at 100 and deducts 10 for failures and 3 for warnings.</p>
 
 <!-- GA4 SCORING -->
-<h2 id="ga4-scoring">GA4: Grading Scale</h2>
-<p>Same A–F grading as the page scanner. Start at 100, subtract penalties per severity. GA4 audit and page scan scores are presented separately so you can see property configuration health vs. on-page implementation health independently.</p>
-
-<!-- PIXEL AUDIT -->
-<h2 id="pixel-audit">Pixel Validation</h2>
-<p>For each detected pixel, the scanner validates:</p>
+<h2 id="ga4-scoring">GA4 Audit Grading</h2>
+<p>The GA4 audit uses the same A&ndash;F grading scale as the page scanner. Common issues that drop scores:</p>
 <ul>
-  <li><strong>Base code:</strong> Is the pixel script loading correctly?</li>
-  <li><strong>Standard events:</strong> Are platform-recommended events configured? (PageView, ViewContent, AddToCart, Purchase, etc.)</li>
-  <li><strong>Advanced Matching:</strong> Are hashed user identifiers being passed? (email, phone, name)</li>
-  <li><strong>Consent integration:</strong> Does the pixel respect consent state?</li>
+  <li><strong>Data retention set to 2 months</strong> (default) &mdash; should be 14 months</li>
+  <li><strong>No key events defined</strong> &mdash; GA4 is collecting data but not measuring conversions</li>
+  <li><strong>Enhanced measurement toggles off</strong> &mdash; missing scroll, video, file download tracking</li>
+  <li><strong>Google Ads not linked</strong> &mdash; conversion data not flowing to ad campaigns</li>
+  <li><strong>No custom dimensions</strong> &mdash; missing user segmentation capability</li>
+  <li><strong>Only default audiences</strong> &mdash; no retargeting audiences built</li>
 </ul>
 
-<!-- CAPI -->
-<h2 id="capi-audit">CAPI Checks</h2>
-<p><span class="badge amber">PHASE 3</span> For platforms supporting server-side events (Meta, Google, TikTok), the auditor checks:</p>
+<!-- AI VISION SETUP -->
+<h2 id="vision-setup">AI Vision: Gemini API Key Setup</h2>
+<p><span class="badge green">LIVE</span> The AI Vision feature uses Google's Gemini 2.0 Flash model to analyze webpage HTML and identify every trackable interactive element.</p>
+
+<h3>Get your free Gemini API key</h3>
+<ol>
+  <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a></li>
+  <li>Sign in with any Google account</li>
+  <li>Click <strong>Create API key</strong></li>
+  <li>Copy the key and paste it into the Auditor's <strong>AI Vision</strong> tab</li>
+</ol>
+
+<div class="callout security">
+  <strong>&#128274; Your API key never touches our servers.</strong> The call goes directly from your browser to <code>generativelanguage.googleapis.com</code>. We never see your key. It's stored in <code>sessionStorage</code> only &mdash; gone when you close the tab.
+</div>
+
+<p>The free tier of Gemini API provides generous usage limits for individual audits. No billing setup is required.</p>
+
+<!-- AI VISION HOW -->
+<h2 id="vision-how">AI Vision: How It Works</h2>
+<p>When you run an AI Vision scan:</p>
+<ol>
+  <li>The tool fetches the page HTML via CORS proxy (same as Page Scanner)</li>
+  <li>The HTML (truncated to fit context) is sent to Gemini 2.0 Flash with a specialized analytics prompt</li>
+  <li>The AI identifies every interactive element on the page that should be tracked</li>
+  <li>Results are returned as structured data with GA4 event recommendations</li>
+</ol>
+
+<p>The AI looks for 6 categories of trackable elements:</p>
 <ul>
-  <li>Whether CAPI endpoints are active</li>
-  <li>Event match quality scoring (Meta Marketing API)</li>
-  <li>Deduplication parameters (<code>event_id</code> present)</li>
-  <li>Required user data fields (<code>em</code>, <code>ph</code>, <code>client_ip_address</code>, <code>client_user_agent</code>)</li>
-  <li>Event coverage comparison: client-side only vs. server-side redundancy</li>
+  <li><strong>Forms</strong> &mdash; Contact forms, signup forms, newsletter opt-ins, search boxes</li>
+  <li><strong>CTAs</strong> &mdash; Buttons and links that are calls-to-action (Buy Now, Get Started, etc.)</li>
+  <li><strong>Navigation</strong> &mdash; Menu items, category links, filter controls</li>
+  <li><strong>Ecommerce</strong> &mdash; Product cards, add-to-cart buttons, wishlist, cart icon</li>
+  <li><strong>Engagement</strong> &mdash; Video players, image carousels, tabs, accordions, chat widgets</li>
+  <li><strong>Conversion</strong> &mdash; Phone numbers, email links, booking/scheduling widgets</li>
 </ul>
 
-<!-- PLATFORMS -->
-<h2 id="platforms">Supported Platforms</h2>
+<!-- AI VISION OUTPUT -->
+<h2 id="vision-output">AI Vision: Output</h2>
+<p>For each element the AI finds, you get:</p>
 <table>
-  <tr><th>Platform</th><th>Page Scan</th><th>Config Audit</th><th>CAPI Check</th><th>Remediation</th></tr>
-  <tr><td>Google Analytics 4</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓ (Phase 2)</td><td>—</td><td style="color:var(--green)">✓</td></tr>
-  <tr><td>Google Tag Manager</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓ (Phase 2)</td><td>—</td><td style="color:var(--green)">✓</td></tr>
-  <tr><td>Meta Pixel</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓ (Phase 3)</td><td style="color:var(--green)">✓</td></tr>
-  <tr><td>Google Ads</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td>—</td><td style="color:var(--green)">✓</td></tr>
-  <tr><td>TikTok</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--amber)">Planned</td><td style="color:var(--green)">✓</td></tr>
-  <tr><td>LinkedIn</td><td style="color:var(--green)">✓</td><td>—</td><td>—</td><td style="color:var(--green)">✓</td></tr>
-  <tr><td>Pinterest</td><td style="color:var(--green)">✓</td><td>—</td><td>—</td><td style="color:var(--amber)">Planned</td></tr>
-  <tr><td>Snapchat</td><td style="color:var(--green)">✓</td><td>—</td><td>—</td><td style="color:var(--amber)">Planned</td></tr>
-  <tr><td>X / Twitter</td><td style="color:var(--green)">✓</td><td>—</td><td>—</td><td style="color:var(--amber)">Planned</td></tr>
-  <tr><td>Microsoft UET</td><td style="color:var(--green)">✓</td><td>—</td><td>—</td><td style="color:var(--amber)">Planned</td></tr>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td><strong>Event name</strong></td><td>Recommended GA4 event name in <code>snake_case</code> (e.g., <code>generate_lead</code>, <code>view_item</code>)</td></tr>
+  <tr><td><strong>Element</strong></td><td>Description of the interactive element and its location</td></tr>
+  <tr><td><strong>Parameters</strong></td><td>Key parameters to capture (e.g., <code>form_name</code>, <code>button_text</code>, <code>video_title</code>)</td></tr>
+  <tr><td><strong>Priority</strong></td><td>Critical, High, Medium, or Low</td></tr>
+  <tr><td><strong>Tracked</strong></td><td>Yes, Partial, or No &mdash; based on what the AI sees in the existing HTML</td></tr>
 </table>
+
+<p>If you've already run a Page Scan, the AI Vision results complement it by finding elements that the DOM-based scanner can't detect (interactive behaviors, visual CTAs, etc.).</p>
 
 <!-- REMEDIATION -->
 <h2 id="remediation">Remediation Code Generation</h2>
-<p>For every issue found, the auditor generates platform-specific, copy-paste-ready code. This is the core differentiator — no other tool does this.</p>
+<p><span class="badge green">LIVE</span> For every issue found by the Page Scanner, the tool generates platform-specific, copy-paste-ready code. This is the core differentiator &mdash; no other tool does this.</p>
 
 <h3>Types of generated code</h3>
 <table>
   <tr><th>Issue Type</th><th>Generated Fix</th></tr>
-  <tr><td>Missing dataLayer events</td><td><code>dataLayer.push()</code> with correct event name, parameters, and placement instructions</td></tr>
-  <tr><td>Missing GTM tags</td><td>GTM container JSON fragment importable via GTM UI</td></tr>
-  <tr><td>Missing pixel events</td><td>Platform-specific event code (fbq, ttq, etc.) with required parameters</td></tr>
-  <tr><td>Missing pixels entirely</td><td>Full base code installation snippet</td></tr>
-  <tr><td>Missing CAPI</td><td>Server endpoint boilerplate in Node.js (Python and PHP planned)</td></tr>
+  <tr><td>Missing ecommerce events</td><td><code>dataLayer.push()</code> for <code>purchase</code>, <code>add_to_cart</code>, <code>view_item</code>, <code>begin_checkout</code></td></tr>
+  <tr><td>Missing lead events</td><td><code>dataLayer.push()</code> for <code>generate_lead</code> with form parameters</td></tr>
+  <tr><td>Missing pixel events</td><td>Platform-specific event code (<code>fbq</code>, <code>ttq</code>, etc.) with required parameters</td></tr>
+  <tr><td>Missing pixels entirely</td><td>Full base code installation snippet (e.g., LinkedIn Insight tag)</td></tr>
+  <tr><td>Meta CAPI not detected</td><td>Server-side endpoint boilerplate in Node.js with Python guidance</td></tr>
   <tr><td>Missing consent</td><td>Google Consent Mode v2 default + update template</td></tr>
-  <tr><td>Missing Enhanced Conversions</td><td><code>gtag('set', 'user_data', {...})</code> template</td></tr>
+  <tr><td>Missing Enhanced Conversions</td><td><code>gtag('set', 'user_data', {...})</code> with all supported fields</td></tr>
+  <tr><td>dataLayer not initialized</td><td><code>window.dataLayer = window.dataLayer || []</code> with initial page data push</td></tr>
+  <tr><td>GTM noscript missing</td><td>Complete <code>&lt;noscript&gt;</code> iframe snippet</td></tr>
 </table>
 
 <h3>Using remediation code</h3>
 <ol>
-  <li>Click "Show remediation code" on any issue</li>
-  <li>Click "Copy" to copy to clipboard</li>
-  <li>Replace placeholder values (<code>{{ORDER_ID}}</code>, <code>{{PIXEL_ID}}</code>, etc.) with your actual dynamic values</li>
+  <li>Click <strong>"Show remediation code"</strong> on any issue</li>
+  <li>Click <strong>"Copy"</strong> to copy to clipboard</li>
+  <li>Replace <code>{{PLACEHOLDER}}</code> values with your actual dynamic values (e.g., <code>{{ORDER_ID}}</code>, <code>{{PIXEL_ID}}</code>)</li>
   <li>Deploy via GTM custom HTML tag, or paste directly into your page template</li>
-  <li>Test using GTM Preview Mode or browser DevTools console</li>
+  <li>Test using GTM Preview Mode, Meta Pixel Helper, or browser DevTools console</li>
 </ol>
 
-<!-- GTM IMPORT -->
-<h2 id="gtm-import">GTM Container Import</h2>
-<p><span class="badge blue">PHASE 4</span> For issues that can be fixed via GTM, the auditor generates importable container JSON files. To import:</p>
-<ol>
-  <li>Export the GTM container JSON from the auditor</li>
-  <li>Open your GTM container → Admin → Import Container</li>
-  <li>Choose "Merge" → "Rename conflicting tags"</li>
-  <li>Review the imported tags, triggers, and variables</li>
-  <li>Test in Preview Mode before publishing</li>
-</ol>
-
-<!-- DEV HANDOFF -->
-<h2 id="dev-handoff">Developer Handoff</h2>
-<p>Click "Download Remediation Code" to get a complete developer handoff document containing:</p>
-<ul>
-  <li>Priority-ordered fix list (Critical → Low)</li>
-  <li>Exact code snippets for each fix</li>
-  <li>File/page placement instructions</li>
-  <li>Testing verification steps</li>
-  <li>Estimated implementation complexity</li>
-</ul>
+<!-- PLATFORMS -->
+<h2 id="platforms">Supported Platforms</h2>
+<table>
+  <tr><th>Platform</th><th>Detection</th><th>Validation</th><th>Remediation Code</th></tr>
+  <tr><td>Google Analytics 4</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--green)">&#10003;</td></tr>
+  <tr><td>Google Tag Manager</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--green)">&#10003;</td></tr>
+  <tr><td>Meta Pixel</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--green)">&#10003;</td></tr>
+  <tr><td>Google Ads</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--green)">&#10003;</td></tr>
+  <tr><td>TikTok Pixel</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--green)">&#10003;</td></tr>
+  <tr><td>LinkedIn Insight</td><td style="color:var(--green)">&#10003;</td><td>&mdash;</td><td style="color:var(--green)">&#10003;</td></tr>
+  <tr><td>Pinterest Tag</td><td style="color:var(--green)">&#10003;</td><td>&mdash;</td><td>&mdash;</td></tr>
+  <tr><td>Snapchat Pixel</td><td style="color:var(--green)">&#10003;</td><td>&mdash;</td><td>&mdash;</td></tr>
+  <tr><td>X / Twitter Pixel</td><td style="color:var(--green)">&#10003;</td><td>&mdash;</td><td>&mdash;</td></tr>
+  <tr><td>Microsoft UET</td><td style="color:var(--green)">&#10003;</td><td>&mdash;</td><td>&mdash;</td></tr>
+</table>
 
 <!-- EXPORTS -->
 <h2 id="exports">Export Formats</h2>
@@ -389,47 +413,59 @@ li{margin-bottom:.35rem;font-size:.9rem}
   <tr><th>Format</th><th>Contents</th><th>Best For</th></tr>
   <tr><td>JSON</td><td>Complete scan results with all metadata</td><td>Programmatic use, CI/CD integration</td></tr>
   <tr><td>CSV</td><td>Tag inventory with status and issues</td><td>Spreadsheet analysis, client reporting</td></tr>
-  <tr><td>Remediation TXT</td><td>All fix code with descriptions</td><td>Developer handoff</td></tr>
-  <tr><td>Print / PDF</td><td>Full visual report</td><td>Client presentations, audits</td></tr>
+  <tr><td>Remediation TXT</td><td>All fix code with descriptions, severity-ordered</td><td>Developer handoff</td></tr>
+  <tr><td>Print / PDF</td><td>Full visual report</td><td>Client presentations, audit documentation</td></tr>
 </table>
 
-<!-- AI VISION -->
-<h2 id="ai-vision">AI Page Vision</h2>
-<p><span class="badge purple">PHASE 5</span> Uses Gemini Vision or Claude Vision to analyze page screenshots and suggest tracking events based on visible interactive elements.</p>
-<p>The AI identifies forms, CTAs, navigation elements, ecommerce components, engagement widgets, and conversion elements. Each suggestion includes a recommended GA4 event name, parameters, and priority level. Suggestions are mapped against existing tracking from the page scan to identify gaps.</p>
-<p>Requires: Gemini API key or Claude API key (stored in sessionStorage only).</p>
+<!-- SESSION -->
+<h2 id="session">Session Storage</h2>
+<p>The Auditor uses <code>sessionStorage</code> to keep your credentials and scan results available for the duration of your browser session.</p>
 
-<!-- PORTFOLIO -->
-<h2 id="portfolio">Multi-Site Portfolio</h2>
-<p><span class="badge purple">PHASE 6</span> Manage multiple sites with a standardized tracking schema. Define required events, naming conventions, and pixel requirements at the portfolio level. Run audits across all sites and compare coverage side-by-side.</p>
-<p>Designed for agencies and portfolio companies managing 10–100+ properties.</p>
+<h3>What's stored</h3>
+<table>
+  <tr><th>Key</th><th>Value</th><th>Lifetime</th></tr>
+  <tr><td><code>ga4_token</code></td><td>Google OAuth access token</td><td>Until tab closes or token expires (~1 hour)</td></tr>
+  <tr><td><code>gemini_key</code></td><td>Gemini API key</td><td>Until tab closes</td></tr>
+</table>
+
+<p>Scan results (tags, scores, issues) are held in JavaScript memory only &mdash; not written to <code>sessionStorage</code>. They persist as long as you don't refresh the page.</p>
+
+<h3>Clearing your data</h3>
+<p>Use the <strong>Settings</strong> tab to view, clear individual keys, or nuke everything with "Clear All Keys &amp; Data." Closing the browser tab also clears everything automatically.</p>
 
 <!-- API -->
 <h2 id="api">API Reference</h2>
-<p>The scan engine is available as a JavaScript module for integration into other tools:</p>
-<pre><code>// Import the scan engine
-import { scanHTML, TAG_DEFS, detectConsent } from './auditor-core.js';
+<p>The scan engine is a set of JavaScript functions embedded in <code>app.html</code>. Key functions available in the global scope:</p>
+<pre><code>// Run a scan on HTML string
+var result = scanHTML(htmlString, 'https://example.com');
 
-// Scan HTML string
-const result = scanHTML(htmlString, 'https://example.com');
-
-// Result structure
+// Result structure:
 {
   url: string,
   scannedAt: string,        // ISO 8601
   tags: { [key]: TagResult },
   consent: ConsentResult,
   issues: Issue[],
-  score: number,             // 0–100
-  grade: string,             // A–F
+  score: number,             // 0-100
+  grade: string,             // A-F
   gradeLabel: string,
   tagCount: number,
   issueCount: number
+}
+
+// Each issue:
+{
+  sev: 'critical' | 'high' | 'medium' | 'low',
+  title: string,
+  desc: string,
+  fix: string  // Copy-paste remediation code
 }</code></pre>
+
+<p>For integration into other tools, the <code>TAG_DEFS</code> object contains all platform detection signatures and can be extended with new platforms. See <a href="https://github.com/itallstartedwithaidea/analytics-auditor/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> for instructions.</p>
 
 <hr style="border:none;border-top:1px solid var(--border);margin:3rem 0 2rem">
 <p style="font-size:.82rem;color:var(--text3)">
-  Built by <a href="https://itallstartedwithaidea.com">John Williams</a> — Senior Paid Media Specialist at <a href="https://www.seerinteractive.com">Seer Interactive</a>.<br>
+  Built by <a href="https://itallstartedwithaidea.com">John Williams</a> &mdash; Senior Paid Media Specialist at <a href="https://www.seerinteractive.com">Seer Interactive</a>.<br>
   Part of the <a href="https://googleadsagent.ai">Google Ads Agent</a> ecosystem. <a href="https://github.com/itallstartedwithaidea/analytics-auditor">Open source on GitHub.</a>
 </p>
 
@@ -437,7 +473,6 @@ const result = scanHTML(htmlString, 'https://example.com');
 </div>
 
 <script>
-// Highlight active sidebar link on scroll
 (function(){
   var links = document.querySelectorAll('.sidebar-link');
   var sections = [];
