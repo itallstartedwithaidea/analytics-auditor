@@ -150,11 +150,11 @@ select.url-input{cursor:pointer}
           <input type="text" class="url-input" id="urlInput" placeholder="https://example.com" spellcheck="false" onkeydown="if(event.key==='Enter')runScan()">
           <button class="scan-btn" id="scanBtn" onclick="runScan()">Scan Page</button>
         </div>
-        <div id="playwrightBtn" style="display:none;margin-bottom:10px">
+        <div id="playwrightBtn" style="margin-bottom:10px">
           <button class="scan-btn blue" onclick="runPlaywrightScan()">&#9889; Deep Scan (Playwright)</button>
           <span style="font-size:.75rem;color:var(--text2);margin-left:8px">Full JS rendering, network capture, Core Web Vitals</span>
         </div>
-        <div class="proxy-note"><strong>How it works:</strong> We try multiple CORS proxies to fetch the page HTML. If all fail, use <strong>Paste HTML</strong>. For full JS rendering + network capture, set up a <strong>Playwright Worker</strong> in Settings. All analysis runs in your browser.</div>
+        <div class="proxy-note"><strong>Scan Page</strong> uses CORS proxies to fetch HTML (works now). <strong>Deep Scan</strong> requires a Playwright worker at scan.googleadsagent.ai (see Settings &rarr; Playwright Setup). All analysis runs in your browser.</div>
       </div>
       <div id="htmlMode" style="display:none">
         <textarea class="html-input" id="htmlInput" placeholder="Paste the full HTML source code here..." style="display:block"></textarea>
@@ -180,13 +180,16 @@ select.url-input{cursor:pointer}
       <p>Connect to the GA4 Admin API and run a comprehensive property health check. Optional: use analytics.edit scope to auto-fix issues.</p>
       <div class="key-saved" id="ga4KeySaved">&#10003; Access token saved for this session</div>
       <div class="key-help">
-        <strong>How to get your access token (60 seconds):</strong><br>
-        1. Open <a href="https://developers.google.com/oauthplayground/" target="_blank">Google OAuth Playground</a><br>
-        2. In Step 1 &rarr; find <strong>Google Analytics Admin API v1beta</strong> &rarr; select <code>https://www.googleapis.com/auth/analytics.readonly</code><br>
-        &nbsp;&nbsp;&nbsp;&#8627; <em>For auto-fix: also select <code>analytics.edit</code> scope</em><br>
-        3. Click <strong>Authorize APIs</strong> and sign in<br>
-        4. In Step 2 &rarr; click <strong>Exchange authorization code for tokens</strong><br>
-        5. Copy the <strong>Access token</strong> and paste below<br><br>
+        <strong>Step-by-step (60 seconds):</strong><br>
+        1. Open <a href="https://developers.google.com/oauthplayground/" target="_blank">Google OAuth Playground</a> in a new tab<br>
+        2. On the left side, scroll down the list of APIs<br>
+        3. Find and click <strong>Google Analytics Admin API v1beta</strong> to expand it<br>
+        4. Check the box next to: <code>https://www.googleapis.com/auth/analytics.readonly</code><br>
+        &nbsp;&nbsp;&nbsp;&#8627; <em>Optional: also check <code>analytics.edit</code> to enable auto-fix buttons</em><br>
+        5. Click the blue <strong>Authorize APIs</strong> button (bottom of left panel)<br>
+        6. Sign in with the Google account that has access to your GA4 properties<br>
+        7. On Step 2 &rarr; click <strong>Exchange authorization code for tokens</strong><br>
+        8. Copy the <strong>Access token</strong> (long string starting with <code>ya29.</code>) and paste below<br><br>
         <em style="color:var(--amber)">&#128274; Token expires ~1 hour. Stored in browser tab only. Read-only by default.</em>
       </div>
       <div class="key-row">
@@ -212,13 +215,17 @@ select.url-input{cursor:pointer}
       <p>Inspect every tag, trigger, variable, and folder in your GTM container. Detect unused tags, naming issues, and missing configurations.</p>
       <div class="key-saved" id="gtmKeySaved">&#10003; GTM access token saved for this session</div>
       <div class="key-help">
-        <strong>How to get your GTM access token:</strong><br>
-        1. Open <a href="https://developers.google.com/oauthplayground/" target="_blank">Google OAuth Playground</a><br>
-        2. In Step 1 &rarr; find <strong>Tag Manager API v2</strong> &rarr; select <code>https://www.googleapis.com/auth/tagmanager.readonly</code><br>
-        3. Click <strong>Authorize APIs</strong> and sign in<br>
-        4. In Step 2 &rarr; click <strong>Exchange authorization code for tokens</strong><br>
-        5. Copy the <strong>Access token</strong> and paste below<br><br>
-        <em style="color:var(--amber)">&#128274; Read-only access. Your container is never modified.</em>
+        <strong style="color:var(--red)">&#9888; Important: GTM requires a DIFFERENT token than GA4.</strong> You cannot reuse your GA4 token here.<br><br>
+        <strong>Step-by-step (60 seconds):</strong><br>
+        1. Open <a href="https://developers.google.com/oauthplayground/" target="_blank">Google OAuth Playground</a> in a new tab<br>
+        2. On the left side, scroll down the list of APIs<br>
+        3. Find and click <strong>Tag Manager API v2</strong> to expand it<br>
+        4. Check the box next to: <code>https://www.googleapis.com/auth/tagmanager.readonly</code><br>
+        5. Click the blue <strong>Authorize APIs</strong> button (bottom of left panel)<br>
+        6. Sign in with the Google account that has access to your GTM containers<br>
+        7. On Step 2 &rarr; click <strong>Exchange authorization code for tokens</strong><br>
+        8. Copy the <strong>Access token</strong> (long string starting with <code>ya29.</code>) and paste below<br><br>
+        <em style="color:var(--amber)">&#128274; Read-only. Expires in ~1 hour. Your container is never modified. If you get "expired" — generate a fresh token.</em>
       </div>
       <div class="key-row">
         <input type="password" class="key-input" id="gtmToken" placeholder="Paste your GTM access token...">
@@ -270,11 +277,11 @@ select.url-input{cursor:pointer}
       <h2>&#9881; Session Settings</h2>
       <p>All keys live in <code>sessionStorage</code>. They vanish when you close the tab. Nothing is sent to our servers.</p>
       <h3 style="font-size:.95rem;margin:1.5rem 0 .5rem">Playwright Worker URL</h3>
-      <p style="font-size:.8rem;color:var(--text2)">For deep scanning with full JS rendering. <a href="https://github.com/itallstartedwithaidea/analytics-auditor" target="_blank">Setup guide &rarr;</a></p>
+      <p style="font-size:.8rem;color:var(--text2)">Deep scan endpoint. Default: <code>scan.googleadsagent.ai</code></p>
       <div class="key-row">
-        <input type="text" class="key-input" id="pwUrl" placeholder="https://auditor-scanner.YOUR-SUBDOMAIN.workers.dev" value="">
-        <button class="scan-btn" style="padding:10px 14px" onclick="saveKey('pw_url',document.getElementById('pwUrl').value);checkPW()">Save</button>
-        <button class="export-btn" style="padding:10px 14px" onclick="clearKey('pw_url');document.getElementById('pwUrl').value=''">Clear</button>
+        <input type="text" class="key-input" id="pwUrl" placeholder="https://scan.googleadsagent.ai (default)">
+        <button class="scan-btn" style="padding:10px 14px" onclick="saveKey('pw_url',document.getElementById('pwUrl').value);checkPW()">Save Custom</button>
+        <button class="export-btn" style="padding:10px 14px" onclick="clearKey('pw_url');document.getElementById('pwUrl').value=''">Reset</button>
       </div>
       <h3 style="font-size:.95rem;margin:1.5rem 0 .5rem">Google GA4 Access Token</h3>
       <div class="key-row">
@@ -306,7 +313,11 @@ select.url-input{cursor:pointer}
    GLOBALS & UTILITIES
    =========================================================== */
 var scanResult = null;
+var PW_DEFAULT = 'https://scan.googleadsagent.ai';
 var playwrightData = null;
+var ga4AuditResult = null;
+var gtmAuditResult = null;
+var visionResult = null;
 
 function saveKey(k,v){sessionStorage.setItem(k,v)}
 function getKey(k){return sessionStorage.getItem(k)}
@@ -332,7 +343,7 @@ function setMode(m){
   document.getElementById('demoMode').style.display=m==='demo'?'':'none';
 }
 
-function checkPW(){var u=getKey('pw_url');document.getElementById('playwrightBtn').style.display=u?'':'none'}
+function checkPW(){}
 
 /* Session restore */
 (function(){
@@ -747,10 +758,12 @@ function runHtmlScan(){
 async function runPlaywrightScan(){
   var url=document.getElementById('urlInput').value.trim();
   if(!url)return;if(url.indexOf('http')!==0)url='https://'+url;
-  var pwUrl=getKey('pw_url');if(!pwUrl){alert('Set your Playwright Worker URL in Settings first.');return}
-  showP('progressBar','progressFill','statusMsg',10,'Sending to Playwright Worker...');
+  var pwUrl=getKey('pw_url')||PW_DEFAULT;
+  showP('progressBar','progressFill','statusMsg',10,'Connecting to Deep Scan worker...');
   try{
-    var resp=await fetch(pwUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url})});
+    var ctrl=new AbortController(),tid=setTimeout(function(){ctrl.abort()},15000);
+    var resp=await fetch(pwUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url}),signal:ctrl.signal});
+    clearTimeout(tid);
     if(!resp.ok)throw new Error('Worker returned '+resp.status);
     showP('progressBar','progressFill','statusMsg',50,'Processing Playwright results...');
     playwrightData=await resp.json();
@@ -760,7 +773,12 @@ async function runPlaywrightScan(){
     showP('progressBar','progressFill','statusMsg',100,'Deep scan complete!');
     await delay(400);hideP('progressBar','statusMsg');
     renderResults(scanResult);
-  }catch(e){hideP('progressBar','statusMsg');alert('Playwright scan failed: '+e.message)}
+  }catch(e){
+    hideP('progressBar','statusMsg');
+    if(e.name==='AbortError'||e.message==='Failed to fetch'||e.message.indexOf('NetworkError')>-1){
+      if(confirm('Deep Scan worker is not available yet.\n\nThe Playwright worker at scan.googleadsagent.ai needs to be deployed first (see Playwright Setup guide).\n\nWould you like to run a standard proxy scan instead?')){runScan()}
+    }else{alert('Deep Scan error: '+e.message+'\n\nTry the standard "Scan Page" button instead.')}
+  }
 }
 
 function runDemoScan(){
@@ -1201,6 +1219,58 @@ async function runGA4Audit() {
     }
 
     /* 35 */ var mets=await tryApi('/'+prop+'/customMetrics',{customMetrics:[]});
+    var cm=mets.customMetrics||[];
+    cm.length>0 ? ok('Custom Definitions','Custom metrics defined',cm.length+' metric(s)') : skip('Custom Definitions','Custom metrics','0 (optional)');
+
+    /* 36 - orphan check not possible via API */ skip('Custom Definitions','Orphaned definitions','Requires Data API comparison (manual check)');
+
+    /* ===== AUDIENCES & ADVANCED (37-40) ===== */
+    showP('ga4PB','ga4PF','ga4SM',86,'Checking audiences...');
+
+    /* 37 */ var auds=await tryApi('/'+prop+'/audiences',{audiences:[]});
+    var al=auds.audiences||[], ac=al.length;
+    ac>3 ? ok('Audiences & Advanced','Audiences created',ac+' audience(s)') : ac>0 ? meh('Audiences & Advanced','Limited audiences',ac+' audience(s)','medium','Defaults are All Users + Purchasers. Build retargeting audiences.') : meh('Audiences & Advanced','No audiences found','0','medium');
+    al.forEach(function(a){ var def=/All Users|Purchasers/i.test(a.displayName); (def?skip:ok)('Audiences & Advanced','\u2192 '+(a.displayName||'Unknown'),def?'Default audience':'Custom audience'); });
+
+    /* 38 */ skip('Audiences & Advanced','Audience triggers','Check manually: Admin > Audiences > Triggers');
+    /* 39 */ skip('Audiences & Advanced','User access audit','Check manually: Admin > Account Access Management');
+    /* 40 */ skip('Audiences & Advanced','Data sharing settings','Check manually: Admin > Account Settings');
+
+    /* ===== SCORE ===== */
+    showP('ga4PB','ga4PF','ga4SM',95,'Calculating score...');
+    C.forEach(function(c){
+      if(c.st==='fail') score -= SEV[c.sev]||5;
+      else if(c.st==='warn') score -= Math.max(2,Math.floor((SEV[c.sev]||5)/2));
+    });
+    score=Math.max(0,score);
+    var pc=C.filter(function(c){return c.st==='pass';}).length, wc=C.filter(function(c){return c.st==='warn';}).length, fc=C.filter(function(c){return c.st==='fail';}).length;
+
+    showP('ga4PB','ga4PF','ga4SM',100,'Audit complete \u2014 '+C.length+' checks ('+pc+' pass, '+wc+' warn, '+fc+' fail)');
+    await delay(600); hideP('ga4PB','ga4SM');
+    ga4AuditResult={property:pd,propertyId:prop,checks:C,score:score,counts:{pass:pc,warn:wc,fail:fc},timestamp:new Date().toISOString()};
+    renderGA4Results(pd,prop,C,score,{pass:pc,warn:wc,fail:fc});
+  } catch(e){ hideP('ga4PB','ga4SM'); alert('GA4 Audit failed: '+e.message); }
+}
+
+function renderGA4Results(pd,propId,checks,score,counts){
+  var el=document.getElementById('ga4Results'); el.style.display='';
+  var grade=score>=90?'A':score>=80?'B':score>=70?'C':score>=60?'D':'F';
+  var sc=score>=90?'score-a':score>=80?'score-b':score>=70?'score-c':'score-d';
+  var html='<div class="score-card"><div class="score-circle '+sc+'"><div class="num">'+score+'</div><div class="grade">'+grade+'</div></div><div class="score-meta"><h3>'+esc(pd.displayName||'GA4 Property')+'</h3><p>'+propId+' &mdash; '+checks.length+' checks completed</p><div class="score-summary"><span style="color:var(--green)">&#10003; '+counts.pass+' pass</span><span style="color:var(--amber)">&#9888; '+counts.warn+' warn</span><span style="color:var(--red)">&#10007; '+counts.fail+' fail</span></div></div></div>';
+  html+='<div class="export-bar"><button class="export-btn" onclick="exportGA4Audit()">Export GA4 Audit JSON</button><button class="export-btn" onclick="window.print()">Print Report</button></div>';
+  var lastCat='';
+  checks.forEach(function(c){
+    if(c.cat!==lastCat){ if(lastCat) html+='</div>'; html+='<h3 style="font-size:.9rem;margin:1.5rem 0 .5rem;color:var(--amber);font-weight:500">'+c.cat+'</h3><div class="audit-grid">'; lastCat=c.cat; }
+    html+='<div class="audit-row"><div class="audit-icon '+c.st+'">'+(c.st==='pass'?'&#10003;':c.st==='fail'?'&#10007;':c.st==='warn'?'&#9888;':'&mdash;')+'</div><div class="audit-label">'+c.name+(c.note?' <span style="color:#555;font-size:.78rem">'+c.note+'</span>':'')+'</div><div class="audit-value">'+esc(String(c.val))+'</div></div>';
+  });
+  html+='</div>';
+  el.innerHTML=html; el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function exportGA4Audit(){
+  if(!ga4AuditResult){alert('Run a GA4 audit first.');return}
+  var out={audit:'GA4 40-Point Checklist',timestamp:ga4AuditResult.timestamp,property:ga4AuditResult.property.displayName||'',propertyId:ga4AuditResult.propertyId,score:ga4AuditResult.score,counts:ga4AuditResult.counts,checks:ga4AuditResult.checks.map(function(c){return{category:c.cat,check:c.name,status:c.st,value:c.val,severity:c.sev,note:c.note}})};
+  downloadBlob(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}),'ga4-audit-'+new Date().toISOString().slice(0,10)+'.json');
+}
 /* ===========================================================
    GTM CONTAINER AUDIT — Tag Manager API v2
    =========================================================== */
@@ -1210,9 +1280,9 @@ async function gtmApi(path){
   var token=getKey('gtm_token');
   if(!token)throw new Error('No GTM access token.');
   var resp=await fetch(GTM_BASE+path,{headers:{'Authorization':'Bearer '+token}});
-  if(resp.status===401)throw new Error('Token expired.');
-  if(resp.status===403)throw new Error('Forbidden — authorize tagmanager.readonly scope.');
-  if(!resp.ok)throw new Error('GTM API '+resp.status);
+  if(resp.status===401)throw new Error('Token expired or invalid. Go back to OAuth Playground, generate a NEW token with the Tag Manager API v2 scope, and paste it here.');
+  if(resp.status===403)throw new Error('Permission denied. Make sure you:\n1. Selected "Tag Manager API v2" (not GA4)\n2. Checked "tagmanager.readonly" scope\n3. Signed in with an account that has GTM access');
+  if(!resp.ok)throw new Error('GTM API error '+resp.status);
   return resp.json();
 }
 
@@ -1363,6 +1433,7 @@ async function runGTMAudit(){
 
     showP('gtmPB','gtmPF','gtmSM',100,'Audit complete \u2014 '+C.length+' checks');
     await delay(500);hideP('gtmPB','gtmSM');
+    gtmAuditResult={path:path,checks:C,score:score,counts:{pass:pc,warn:wc,fail:fc},tags:tags,triggers:triggers,variables:variables,timestamp:new Date().toISOString()};
     renderGTMResults(path,C,score,{pass:pc,warn:wc,fail:fc},tags,triggers,variables);
   }catch(e){hideP('gtmPB','gtmSM');alert('GTM Audit failed: '+e.message)}
 }
@@ -1396,7 +1467,9 @@ function renderGTMResults(path,checks,score,counts,tags,triggers,variables){
 }
 
 function exportGTMAuditJSON(){
-  downloadBlob(new Blob([JSON.stringify({audit:'GTM Container Audit',timestamp:new Date().toISOString()},null,2)],{type:'application/json'}),'gtm-audit.json');
+  if(!gtmAuditResult){alert('Run a GTM audit first.');return}
+  var out={audit:'GTM Container Audit',timestamp:gtmAuditResult.timestamp,container:gtmAuditResult.path,score:gtmAuditResult.score,counts:gtmAuditResult.counts,checks:gtmAuditResult.checks.map(function(c){return{category:c.cat,check:c.name,status:c.st,value:c.val,note:c.note}}),tags:gtmAuditResult.tags.map(function(t){return{name:t.name,type:t.type,paused:!!t.paused,firingTriggers:t.firingTriggerId?t.firingTriggerId.length:0}}),triggers:gtmAuditResult.triggers.map(function(t){return{name:t.name,type:t.type,triggerId:t.triggerId}}),variables:gtmAuditResult.variables.map(function(v){return{name:v.name,type:v.type}})};
+  downloadBlob(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}),'gtm-audit-'+new Date().toISOString().slice(0,10)+'.json');
 }
 
 /* ===========================================================
@@ -1453,6 +1526,7 @@ async function runVisionScan(){
 
     showP('visPB','visPF','visSM',100,'Analysis complete \u2014 '+events.length+' elements!');
     await delay(500);hideP('visPB','visSM');
+    visionResult={url:url,events:events,timestamp:new Date().toISOString()};
     renderVisionResults(url,events);
 
   }catch(e){hideP('visPB','visSM');alert('AI Vision failed: '+e.message)}
@@ -1480,7 +1554,9 @@ function renderVisionResults(url,events){
 }
 
 function exportVisionJSON(){
-  downloadBlob(new Blob([JSON.stringify({vision:'AI Event Discovery',timestamp:new Date().toISOString()},null,2)],{type:'application/json'}),'ai-vision.json');
+  if(!visionResult){alert('Run an AI Vision scan first.');return}
+  var out={audit:'AI Event Discovery',timestamp:visionResult.timestamp,url:visionResult.url,totalElements:visionResult.events.length,events:visionResult.events};
+  downloadBlob(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}),'ai-vision-'+new Date().toISOString().slice(0,10)+'.json');
 }
 
 </script>

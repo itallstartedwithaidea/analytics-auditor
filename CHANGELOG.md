@@ -2,6 +2,66 @@
 
 All notable changes to the Marketing Analytics Auditor will be documented in this file.
 
+## [3.0.0] — 2026-02-15
+
+### Added
+
+- **GTM Container Audit** — New tab connecting to Tag Manager API v2
+  - Inspects every tag, trigger, variable, and folder in any container
+  - Tag type breakdown (GA4 Event, GA4 Config, Custom HTML, etc.)
+  - Detects: paused tags, tags without triggers, naming convention issues
+  - Full tag list with firing/blocking trigger counts
+  - Container health score with A–F grading
+- **GTM Container JSON Export** — Importable fix files for every remediation issue
+  - Each missing ecommerce event generates a downloadable GTM container JSON
+  - Includes GA4 Event tags, Custom Event triggers, and Data Layer variables
+  - "Export GTM Import JSON" button generates combined container for all fixes
+  - Drag into GTM Admin → Import Container → Merge → done
+- **Social Sharing Audit** — Open Graph and Twitter Card meta tag validation
+  - Checks og:title, og:description, og:image, og:type, og:url, og:site_name
+  - Checks twitter:card, twitter:title, twitter:image, twitter:site
+  - Remediation code for every missing tag
+- **SEO Health Audit** — Title, description, canonical, viewport, H1, lang, hreflang, robots
+  - Title tag length validation (50-60 chars optimal)
+  - Meta description length validation (120-160 chars)
+  - H1 count validation (exactly one recommended)
+- **Schema.org / Structured Data Detection** — JSON-LD parsing and Microdata detection
+  - Parses each JSON-LD block and displays @type, name, URL
+  - Supports @graph arrays
+  - Remediation code for missing Organization schema
+- **Ecommerce Funnel Completeness** — GA4's full 9-stage spec
+  - Checks: view_item_list, select_item, view_item, add_to_wishlist, add_to_cart, view_cart, begin_checkout, add_shipping_info, add_payment_info, purchase
+  - Each missing stage generates dataLayer code AND GTM Import JSON
+  - Priority scaled by funnel position (purchase = critical)
+- **Per-Platform Pixel Health Scores** — 0-100 score per detected platform
+  - Scoring: Tag present (+30), Standard events (+20), Advanced Matching (+20), CAPI (+15), Dedup (+10), Consent (+5)
+  - Visual health bar with color coding per platform
+- **Deprecated Tag Detection** — Universal Analytics, legacy Facebook, legacy DoubleClick, legacy conversion.js
+- **Duplicate Container Detection** — Flags multiple GTM or GA4 IDs on same page
+- **Cross-Domain Tracking Detection** — Detects linker config and lists domains
+- **Tag Firing Order Validation** — Checks dataLayer before GTM, GTM in head
+- **Performance Signals** — Script counts, render-blocking scripts, lazy loading, page weight
+- **Server-Side GTM Detection** — Detects first-party domain proxy patterns
+- **Consent Mode v2 Completeness** — Checks all 5 consent types
+- **Playwright Deep Scan** — Cloudflare Worker integration for full JS rendering
+  - Default endpoint: scan.googleadsagent.ai
+  - Core Web Vitals (LCP, CLS, FCP, TTFB)
+  - Analytics network request capture (proves tags fire)
+  - dataLayer event capture in real-time
+  - Console error/warning capture
+  - Resource count and transfer sizes
+- **Developer Handoff Export** — Priority-ordered, with time estimates and testing instructions
+- **Google Ads Remarketing Tag Check** — Detects presence of remarketing vs conversion-only
+
+### Changed
+
+- App.html rebuilt from 1,017 to 1,538 lines
+- 5-tab interface (added GTM Audit tab)
+- Export bar expanded: GTM Import JSON, Developer Handoff buttons
+- Issues sorted by severity (Critical → Low)
+- Score calculation uses architecture-defined severity weights (Critical -15, High -10, Medium -5, Low -2)
+- Deep Scan button always visible (defaults to scan.googleadsagent.ai)
+
 ## [2.0.0] — 2026-02-15
 
 ### Added
