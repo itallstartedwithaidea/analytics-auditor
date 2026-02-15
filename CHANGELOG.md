@@ -2,6 +2,34 @@
 
 All notable changes to the Marketing Analytics Auditor will be documented in this file.
 
+## [3.1.0] — 2026-02-15
+
+### Added
+
+- **GA4 Data API — Live Data Flow Verification**
+  - Calls GA4 Data API with same OAuth token to prove data is actually flowing
+  - Shows total events + active users for last 7 days
+  - Top 8 events by volume with counts
+  - Purchase event and revenue verification
+  - Realtime users (last 30 minutes)
+  - Top traffic sources by channel group
+  - Flags configured-but-not-firing scenarios
+- **Auto-Escalation to Deep Scan** — Scan Page now detects Cloudflare, Incapsula, Akamai bot protection and auto-switches to Playwright Deep Scan
+- **Playwright Issue Generation** — Deep Scan findings now generate real scored issues:
+  - Console errors count and severity
+  - Slow FCP/TTFB/load time warnings
+  - Tags found in HTML but NOT firing in network (critical: proves broken tracking)
+- **WAF Detection Banner** — Red warning when proxy scan was blocked, with explanation
+- **Smart Ecommerce Detection** — Requires strong signals (cart, checkout, Shopify, WooCommerce) or 3+ weak signals. Agency/SaaS sites no longer false-flag
+- **Non-Ecommerce "Not Applicable"** — Shows informational message instead of 10 failing checks
+
+### Changed
+
+- App.html: 1,564 → 1,724 lines
+- Playwright timeout increased to 45 seconds for slow sites
+- Export functions (GA4, GTM, Vision) now export full audit data instead of stubs
+- GA4 OAuth instructions updated to include Data API scope
+
 ## [3.0.0] — 2026-02-15
 
 ### Added

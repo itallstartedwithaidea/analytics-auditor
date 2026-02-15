@@ -154,7 +154,7 @@ select.url-input{cursor:pointer}
           <button class="scan-btn blue" onclick="runPlaywrightScan()">&#9889; Deep Scan (Playwright)</button>
           <span style="font-size:.75rem;color:var(--text2);margin-left:8px">Full JS rendering, network capture, Core Web Vitals</span>
         </div>
-        <div class="proxy-note"><strong>Scan Page</strong> uses CORS proxies to fetch HTML (works now). <strong>Deep Scan</strong> requires a Playwright worker at scan.googleadsagent.ai (see Settings &rarr; Playwright Setup). All analysis runs in your browser.</div>
+        <div class="proxy-note"><strong>Scan Page</strong> fetches HTML via proxy. If bot protection is detected, it auto-switches to <strong>Deep Scan</strong> (Playwright) which runs a real browser to bypass Cloudflare, Incapsula, etc. and captures all network requests + dataLayer events.</div>
       </div>
       <div id="htmlMode" style="display:none">
         <textarea class="html-input" id="htmlInput" placeholder="Paste the full HTML source code here..." style="display:block"></textarea>
@@ -185,6 +185,7 @@ select.url-input{cursor:pointer}
         2. On the left side, scroll down the list of APIs<br>
         3. Find and click <strong>Google Analytics Admin API v1beta</strong> to expand it<br>
         4. Check the box next to: <code>https://www.googleapis.com/auth/analytics.readonly</code><br>
+        &nbsp;&nbsp;&nbsp;&#8627; <em>Also check <strong>Google Analytics Data API</strong> &rarr; <code>https://www.googleapis.com/auth/analytics.readonly</code> for live data flow checks</em><br>
         &nbsp;&nbsp;&nbsp;&#8627; <em>Optional: also check <code>analytics.edit</code> to enable auto-fix buttons</em><br>
         5. Click the blue <strong>Authorize APIs</strong> button (bottom of left panel)<br>
         6. Sign in with the Google account that has access to your GA4 properties<br>
@@ -432,8 +433,24 @@ var ECOM_FUNNEL=[
 function scanHTML(html,url){
   var r={url:url||'unknown',html:html,tags:{},issues:[],score:100,consent:{detected:false,type:null},
     social:{},seo:{},schema:[],ecommerce:{detected:false,events:[]},performance:{},deprecated:[],
-    duplicates:[],crossDomain:false,tagOrder:{dlBeforeGTM:null,gtmInHead:null}};
+    duplicates:[],crossDomain:false,tagOrder:{dlBeforeGTM:null,gtmInHead:null},
+    blockedByWAF:false,wafType:null};
   var lc=html.toLowerCase();
+
+  /* --- WAF / BOT PROTECTION DETECTION --- */
+  if((lc.indexOf('attention required')>-1&&lc.indexOf('cloudflare')>-1)||
+     (lc.indexOf('just a moment')>-1&&lc.indexOf('enable javascript')>-1)||
+     (lc.indexOf('checking your browser')>-1)||
+     (lc.indexOf('ray id')>-1&&lc.indexOf('cloudflare')>-1&&html.length<15000)||
+     (lc.indexOf('access denied')>-1&&lc.indexOf('incapsula')>-1)||
+     (lc.indexOf('please wait while we verify')>-1)||
+     (lc.indexOf('pardon our interruption')>-1)){
+    r.blockedByWAF=true;
+    if(lc.indexOf('cloudflare')>-1)r.wafType='Cloudflare';
+    else if(lc.indexOf('incapsula')>-1)r.wafType='Imperva/Incapsula';
+    else if(lc.indexOf('akamai')>-1)r.wafType='Akamai';
+    else r.wafType='Unknown WAF';
+  }
 
   /* --- TAG DETECTION --- */
   var tagCount=0;
@@ -527,7 +544,10 @@ function scanHTML(html,url){
   /* --- ECOMMERCE FUNNEL DETECTION --- */
   var dlContent=html.match(/dataLayer\.push\(\s*\{[\s\S]*?\}\s*\)/g)||[];
   var allDlText=dlContent.join(' ');
-  r.ecommerce.detected=lc.indexOf('product')>-1||lc.indexOf('cart')>-1||lc.indexOf('checkout')>-1||lc.indexOf('shop')>-1||lc.indexOf('ecommerce')>-1||lc.indexOf('price')>-1;
+  /* Strong ecommerce signals — must have 2+ OR 1 strong signal to flag as ecommerce */
+  var ecomStrong=lc.indexOf('add_to_cart')>-1||lc.indexOf('add-to-cart')>-1||lc.indexOf('checkout')>-1&&lc.indexOf('begin_checkout')>-1||lc.indexOf('/cart')>-1||lc.indexOf('woocommerce')>-1||lc.indexOf('shopify')>-1||lc.indexOf('bigcommerce')>-1||lc.indexOf('magento')>-1;
+  var ecomWeak=['product','cart','shop','price','ecommerce'].filter(function(k){return lc.indexOf(k)>-1}).length;
+  r.ecommerce.detected=ecomStrong||ecomWeak>=3;
   ECOM_FUNNEL.forEach(function(stage){
     var found=allDlText.indexOf("'"+stage.event+"'")>-1||allDlText.indexOf('"'+stage.event+'"')>-1||html.indexOf(stage.event)>-1;
     r.ecommerce.events.push({event:stage.event,desc:stage.desc,stage:stage.stage,found:found});
@@ -678,6 +698,46 @@ function scanHTML(html,url){
   return r;
 }
 
+/* Post-process: merge Playwright insights into issues */
+function mergePlaywrightIssues(r){
+  if(!r.playwright)return r;
+  var pw=r.playwright;
+  /* Console errors as issues */
+  if(pw.consoleLogs){
+    var errors=pw.consoleLogs.filter(function(l){return l.type==='error'});
+    if(errors.length>0){
+      r.issues.push({sev:errors.length>5?'high':'medium',title:errors.length+' JavaScript console error(s) detected',
+        desc:'Console errors can indicate broken tags, CSP violations, or failed API calls. Top errors: '+errors.slice(0,3).map(function(e){return e.text.substring(0,60)}).join('; ')});
+    }
+  }
+  /* Vitals issues */
+  if(pw.vitals){
+    if(pw.vitals.fcp&&pw.vitals.fcp>3000)r.issues.push({sev:'high',title:'Slow First Contentful Paint ('+Math.round(pw.vitals.fcp)+'ms)',desc:'FCP should be under 1800ms for good UX. Slow FCP delays tag firing and hurts conversion tracking accuracy.'});
+    if(pw.vitals.ttfb&&pw.vitals.ttfb>1800)r.issues.push({sev:'medium',title:'Slow TTFB ('+Math.round(pw.vitals.ttfb)+'ms)',desc:'Time to First Byte should be under 800ms. Server response time affects all downstream tag loading.'});
+    if(pw.vitals.loadComplete&&pw.vitals.loadComplete>8000)r.issues.push({sev:'medium',title:'Slow page load ('+Math.round(pw.vitals.loadComplete/1000)+'s)',desc:'Full page load over 8 seconds. Tags dependent on window.load may fire very late.'});
+  }
+  /* Check if tags detected in HTML but NOT firing in network */
+  if(pw.analyticsRequests){
+    var netPlatforms=pw.analyticsRequests.map(function(r){return r.platform});
+    if(r.tags.ga4.found&&!netPlatforms.some(function(p){return p==='GA4'}))r.issues.push({sev:'critical',title:'GA4 tag found in HTML but NOT firing',desc:'GA4 code exists but no network request was captured. Tag may be blocked by consent, ad blocker, or misconfiguration.'});
+    if(r.tags.meta.found&&!netPlatforms.some(function(p){return p==='Meta Pixel'}))r.issues.push({sev:'high',title:'Meta Pixel found in HTML but NOT firing',desc:'Meta Pixel code exists but no network request to facebook.net was captured.'});
+    if(r.tags.gads.found&&!netPlatforms.some(function(p){return p==='Google Ads'}))r.issues.push({sev:'high',title:'Google Ads tag found in HTML but NOT firing',desc:'Google Ads code exists but no network request to googleadservices.com was captured.'});
+  }
+  /* Recalculate score */
+  r.score=100;
+  r.issues.forEach(function(i){
+    if(i.sev==='critical')r.score-=15;
+    else if(i.sev==='high')r.score-=10;
+    else if(i.sev==='medium')r.score-=5;
+    else r.score-=2;
+  });
+  r.score=Math.max(0,r.score);
+  r.grade=r.score>=90?'A':r.score>=80?'B':r.score>=70?'C':r.score>=60?'D':'F';
+  r.gradeLabel=r.score>=90?'Excellent':r.score>=80?'Good':r.score>=70?'Needs Work':r.score>=60?'Poor':'Critical';
+  r.issueCount=r.issues.length;
+  return r;
+}
+
 /* ===========================================================
    GTM CONTAINER JSON GENERATOR
    =========================================================== */
@@ -736,8 +796,17 @@ async function runScan(){
   showP('progressBar','progressFill','statusMsg',10,'Fetching page via proxy...');
   try{
     var html=await fetchViaProxy(url,function(m){showP('progressBar','progressFill','statusMsg',20,m)});
+    /* Check if we got a WAF challenge page instead of the real site */
+    var lc=html.toLowerCase();
+    var isBlocked=(lc.indexOf('attention required')>-1&&lc.indexOf('cloudflare')>-1)||(lc.indexOf('just a moment')>-1&&lc.indexOf('enable javascript')>-1)||(lc.indexOf('checking your browser')>-1)||(lc.indexOf('ray id')>-1&&lc.indexOf('cloudflare')>-1&&html.length<15000)||(lc.indexOf('access denied')>-1&&lc.indexOf('incapsula')>-1)||(lc.indexOf('please wait while we verify')>-1)||(lc.indexOf('pardon our interruption')>-1);
+    if(isBlocked){
+      showP('progressBar','progressFill','statusMsg',30,'Bot protection detected — switching to Deep Scan...');
+      document.getElementById('scanBtn').disabled=false;
+      await delay(500);
+      runPlaywrightScan();
+      return;
+    }
     showP('progressBar','progressFill','statusMsg',60,'Analyzing tags, social meta, SEO, schema...');
-    await delay(300);
     scanResult=scanHTML(html,url);
     showP('progressBar','progressFill','statusMsg',90,'Generating results...');
     await delay(200);
@@ -761,7 +830,7 @@ async function runPlaywrightScan(){
   var pwUrl=getKey('pw_url')||PW_DEFAULT;
   showP('progressBar','progressFill','statusMsg',10,'Connecting to Deep Scan worker...');
   try{
-    var ctrl=new AbortController(),tid=setTimeout(function(){ctrl.abort()},15000);
+    var ctrl=new AbortController(),tid=setTimeout(function(){ctrl.abort()},45000);
     var resp=await fetch(pwUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url}),signal:ctrl.signal});
     clearTimeout(tid);
     if(!resp.ok)throw new Error('Worker returned '+resp.status);
@@ -770,6 +839,7 @@ async function runPlaywrightScan(){
     if(!playwrightData.success)throw new Error(playwrightData.error||'Scan failed');
     scanResult=scanHTML(playwrightData.html,url);
     scanResult.playwright=playwrightData;
+    scanResult=mergePlaywrightIssues(scanResult);
     showP('progressBar','progressFill','statusMsg',100,'Deep scan complete!');
     await delay(400);hideP('progressBar','statusMsg');
     renderResults(scanResult);
@@ -818,6 +888,9 @@ function renderResults(r){
   h+='<div class="score-card"><div class="score-circle '+scClass+'"><div class="num">'+r.score+'</div><div class="grade">'+r.grade+'</div></div><div class="score-meta"><h3>Tag Health Score: '+r.gradeLabel+'</h3><p>'+esc(r.url)+'</p><div class="score-summary"><span style="color:var(--green)">&#10003; '+r.tagCount+' tags</span><span style="color:'+(r.issueCount?'var(--red)':'var(--green)')+'">'+r.issueCount+' issues</span><span style="color:var(--text2)">'+(r.consent.detected?'&#128274; '+r.consent.type:'&#9888; No consent')+'</span>'+(r.ecommerce.detected?'<span style="color:var(--purple)">&#128722; Ecommerce</span>':'')+'</div></div></div>';
 
   /* Export bar */
+  if(r.blockedByWAF){
+    h+='<div style="background:#7f1d1d;border:1px solid var(--red);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1rem"><strong style="color:var(--red)">&#9888; Bot Protection Detected ('+esc(r.wafType)+')</strong><p style="color:#fca5a5;font-size:.85rem;margin:.5rem 0 0">The proxy scan was blocked. Results below reflect the challenge page, not the real site. Use <strong>Deep Scan (Playwright)</strong> for accurate results.</p></div>';
+  }
   h+='<div class="export-bar"><button class="export-btn" onclick="exportJSON()">Export JSON</button><button class="export-btn" onclick="exportCSV()">Export CSV</button><button class="export-btn" onclick="exportRemediation()">Remediation TXT</button><button class="export-btn" onclick="exportGTMContainer()">GTM Import JSON</button><button class="export-btn" onclick="exportDevHandoff()">Developer Handoff</button><button class="export-btn" onclick="window.print()">Print Report</button></div>';
 
   /* ===== SECTION: Detected Tags with Pixel Health ===== */
@@ -887,6 +960,9 @@ function renderResults(r){
       h+=auditRow(e.found?'pass':'fail',e.event,e.found?'Detected':'Missing — '+e.desc);
     });
     h+='</div>';
+  }else{
+    h+='<div class="section-header"><span class="sec-icon">&#128722;</span> Ecommerce Funnel</div>';
+    h+='<div class="audit-grid">'+auditRow('na','Not an ecommerce site','No strong ecommerce signals detected (cart, checkout, product pages). This section is not applicable.')+'</div>';
   }
 
   /* ===== SECTION: Playwright Data (if available) ===== */
@@ -1235,6 +1311,91 @@ async function runGA4Audit() {
     /* 38 */ skip('Audiences & Advanced','Audience triggers','Check manually: Admin > Audiences > Triggers');
     /* 39 */ skip('Audiences & Advanced','User access audit','Check manually: Admin > Account Access Management');
     /* 40 */ skip('Audiences & Advanced','Data sharing settings','Check manually: Admin > Account Settings');
+
+    /* ===== DATA FLOW VERIFICATION (41-45) via GA4 Data API ===== */
+    showP('ga4PB','ga4PF','ga4SM',90,'Checking if data is actually flowing...');
+    var propNum=prop.replace('properties/','');
+    var GA4_DATA='https://analyticsdata.googleapis.com/v1beta/properties/'+propNum+':runReport';
+    try{
+      var token=getKey('ga4_token');
+      /* 41: Total events last 7 days */
+      var evtResp=await fetch(GA4_DATA,{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({dateRanges:[{startDate:'7daysAgo',endDate:'today'}],metrics:[{name:'eventCount'},{name:'activeUsers'}],dimensions:[{name:'eventName'}],limit:20,orderBys:[{metric:{metricName:'eventCount'},desc:true}]})});
+      if(evtResp.ok){
+        var evtData=await evtResp.json();
+        var rows=evtData.rows||[];
+        var totalEvents=0,totalUsers=0;
+        rows.forEach(function(row){totalEvents+=parseInt(row.metricValues[0].value)||0;totalUsers=Math.max(totalUsers,parseInt(row.metricValues[1].value)||0)});
+        if(totalEvents>0){
+          ok('Data Flow (Live)','Data is flowing',totalEvents.toLocaleString()+' events from '+totalUsers.toLocaleString()+' users (last 7 days)');
+          /* Show top events */
+          rows.slice(0,8).forEach(function(row){
+            var evName=row.dimensionValues[0].value;
+            var evCount=parseInt(row.metricValues[0].value)||0;
+            ok('Data Flow (Live)','\u2192 '+evName,evCount.toLocaleString()+' events');
+          });
+        }else{
+          bad('Data Flow (Live)','No data flowing','0 events in last 7 days','critical','GA4 is configured but receiving no data. Check measurement ID and tag firing.');
+        }
+        /* 42: Check for purchase events if ecommerce key events exist */
+        var purchaseRow=rows.find(function(row){return row.dimensionValues[0].value==='purchase'});
+        var addToCartRow=rows.find(function(row){return row.dimensionValues[0].value==='add_to_cart'});
+        if(purchaseRow){
+          var pCount=parseInt(purchaseRow.metricValues[0].value)||0;
+          ok('Data Flow (Live)','Purchase events firing',pCount.toLocaleString()+' purchases last 7 days');
+        }
+        if(addToCartRow){
+          var acCount=parseInt(addToCartRow.metricValues[0].value)||0;
+          ok('Data Flow (Live)','Add to cart events firing',acCount.toLocaleString()+' add_to_cart last 7 days');
+        }
+
+        /* 43: Revenue check */
+        try{
+          var revResp=await fetch(GA4_DATA,{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({dateRanges:[{startDate:'7daysAgo',endDate:'today'}],metrics:[{name:'ecommercePurchases'},{name:'purchaseRevenue'}]})});
+          if(revResp.ok){
+            var revData=await revResp.json();
+            var revRows=revData.rows||[];
+            if(revRows.length>0){
+              var purchases=parseInt(revRows[0].metricValues[0].value)||0;
+              var revenue=parseFloat(revRows[0].metricValues[1].value)||0;
+              if(revenue>0) ok('Data Flow (Live)','Revenue tracking',purchases+' purchases, $'+revenue.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+' revenue (7 days)');
+              else if(purchases>0) meh('Data Flow (Live)','Purchases but no revenue',purchases+' purchases but $0 revenue — check value parameter','high');
+            }
+          }
+        }catch(revE){}
+
+        /* 44: Realtime check (last 30 min) */
+        try{
+          var rtResp=await fetch('https://analyticsdata.googleapis.com/v1beta/properties/'+propNum+':runRealtimeReport',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({metrics:[{name:'activeUsers'}]})});
+          if(rtResp.ok){
+            var rtData=await rtResp.json();
+            var rtRows=rtData.rows||[];
+            var rtUsers=rtRows.length>0?parseInt(rtRows[0].metricValues[0].value)||0:0;
+            if(rtUsers>0) ok('Data Flow (Live)','Realtime users (now)',rtUsers+' active user(s) in last 30 minutes');
+            else meh('Data Flow (Live)','Realtime users','0 active users right now','low');
+          }
+        }catch(rtE){}
+
+        /* 45: Session source check */
+        try{
+          var srcResp=await fetch(GA4_DATA,{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({dateRanges:[{startDate:'7daysAgo',endDate:'today'}],metrics:[{name:'sessions'}],dimensions:[{name:'sessionDefaultChannelGroup'}],limit:5,orderBys:[{metric:{metricName:'sessions'},desc:true}]})});
+          if(srcResp.ok){
+            var srcData=await srcResp.json();
+            var srcRows=srcData.rows||[];
+            if(srcRows.length>0){
+              var topChannels=srcRows.map(function(row){return row.dimensionValues[0].value+': '+parseInt(row.metricValues[0].value).toLocaleString()}).join(', ');
+              ok('Data Flow (Live)','Traffic sources (7 days)',topChannels);
+            }
+          }
+        }catch(srcE){}
+
+      }else if(evtResp.status===403){
+        meh('Data Flow (Live)','Data API access','Token lacks analyticsdata scope — add Google Analytics Data API scope in OAuth Playground for live data checks','low');
+      }else{
+        skip('Data Flow (Live)','Data API','Could not connect (status '+evtResp.status+')');
+      }
+    }catch(dataE){
+      skip('Data Flow (Live)','Data API','Could not connect: '+dataE.message);
+    }
 
     /* ===== SCORE ===== */
     showP('ga4PB','ga4PF','ga4SM',95,'Calculating score...');
