@@ -447,7 +447,7 @@ function scanHTML(html, url) {
     issues.push({
       sev: 'high', title: 'LinkedIn Insight tag not installed',
       desc: 'This appears to be a B2B site but no LinkedIn Insight tag was detected. Required for LinkedIn Ads attribution.',
-      fix: '<!-- LinkedIn Insight Tag -->\n<script type="text/javascript">\n_linkedin_data_partner_ids = _linkedin_data_partner_ids || [];\n_linkedin_data_partner_ids.push({{PARTNER_ID}});\n</script>\n<script type="text/javascript">\n(function(l) {\nif (!l){window.lintrk = function(a,b){window.lintrk.q.push([a,b])};\nwindow.lintrk.q=[]}\nvar s = document.getElementsByTagName("script")[0];\nvar b = document.createElement("script");\nb.type = "text/javascript";b.async = true;\nb.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js";\ns.parentNode.insertBefore(b, s);})(window.lintrk);\n</script>'
+      fix: '<!-- LinkedIn Insight Tag -->\n<scr' + 'ipt type="text/javascript">\n_linkedin_data_partner_ids = _linkedin_data_partner_ids || [];\n_linkedin_data_partner_ids.push({{PARTNER_ID}});\n</scr' + 'ipt>\n<scr' + 'ipt type="text/javascript">\n(function(l) {\nif (!l){window.lintrk = function(a,b){window.lintrk.q.push([a,b])};\nwindow.lintrk.q=[]}\nvar s = document.getElementsByTagName("scr' + 'ipt")[0];\nvar b = document.createElement("scr' + 'ipt");\nb.type = "text/javascript";b.async = true;\nb.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js";\ns.parentNode.insertBefore(b, s);})(window.lintrk);\n</scr' + 'ipt>'
     });
     totalScore -= 10;
   }
@@ -465,7 +465,7 @@ function scanHTML(html, url) {
     issues.push({
       sev: 'medium', title: 'No consent management detected',
       desc: 'No cookie consent banner, Google Consent Mode, or TCF 2.0 implementation found. Required for GDPR/CCPA compliance.',
-      fix: "// Google Consent Mode v2 - add BEFORE any gtag/GTM code:\n<script>\nwindow.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\n\n// Default: deny until user consents\ngtag('consent', 'default', {\n  'ad_storage': 'denied',\n  'ad_user_data': 'denied',\n  'ad_personalization': 'denied',\n  'analytics_storage': 'denied',\n  'wait_for_update': 500\n});\n</script>\n\n// After user grants consent:\ngtag('consent', 'update', {\n  'ad_storage': 'granted',\n  'ad_user_data': 'granted',\n  'ad_personalization': 'granted',\n  'analytics_storage': 'granted'\n});"
+      fix: "// Google Consent Mode v2 - add BEFORE any gtag/GTM code:\n<scr" + "ipt>\nwindow.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\n\n// Default: deny until user consents\ngtag('consent', 'default', {\n  'ad_storage': 'denied',\n  'ad_user_data': 'denied',\n  'ad_personalization': 'denied',\n  'analytics_storage': 'denied',\n  'wait_for_update': 500\n});\n</scr" + "ipt>\n\n// After user grants consent:\ngtag('consent', 'update', {\n  'ad_storage': 'granted',\n  'ad_user_data': 'granted',\n  'ad_personalization': 'granted',\n  'analytics_storage': 'granted'\n});"
     });
     totalScore -= 5;
   }
